@@ -14,8 +14,8 @@ use crate::util::color;
 use hidapi::HidApi;
 
 pub trait Driver {
-    fn new(api: hidapi::HidApi) -> Option<Self> where Self: Sized;
-    fn is_present(api: hidapi::HidApi) -> bool where Self: Sized;
+    fn new(api: &hidapi::HidApi) -> Option<Self> where Self: Sized;
+    fn is_present(api: &hidapi::HidApi) -> bool where Self: Sized;
     fn set_color(&self, color: &color::RGB, brightness: u8) -> bool;
     fn set_breathing(&self, colors: &Vec<color::RGB>, brightness: u8, speed: u8) -> bool;
     fn set_shift(&self, colors: &Vec<color::RGB>, brightness: u8, speed: u8) -> bool;

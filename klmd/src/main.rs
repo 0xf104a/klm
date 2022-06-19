@@ -14,6 +14,8 @@ extern crate hidapi;
 mod drivers;
 mod util;
 mod keyboard;
+mod proto;
+
 
 use std::os::unix::net::UnixListener;
 
@@ -24,26 +26,22 @@ use crate::util::log;
 use crate::util::color::RGB;
 
 const TAG: &'static str = "main";
+const VERSION: &'static str = "0.1.1"; //TODO: synchronize with cargo?
 
 fn main(){
-    log::i(TAG, format!("klmd versiom {} starting.", VERSION));
-    log::w(TAG. "This version is early alpha and is not intended to be used in product mode. Many features are not yet implemnted.");
+    log::i(TAG, &format!("klmd versiom {} starting.", VERSION));
+    log::w(TAG, "This version is early alpha and is not intended to be used in product mode. Many features are not yet implemnted.");
 
-    if let Ok(api) = hidapi::HidApi::new(){
-        log::i(TAG, "Succesfully initialized HID API.")
-    }else{
-        log::e(TAG, "Failed to open HID API.");
-        log::e(TAG, "Check that program has permissions to access HID devices.");
-        log::panic(TAG, "No HID API availiable!");
-    }
 
-    if !ms1563::MS1563::is_present(api){
+    let api = hidapi::HidApi::new().unwrap();
+
+    if !ms1563::MS1563::is_present(&api){
         log::e(TAG, "This program supports only MS1563 keyboards.");
         log::panic(TAG, "No compatiable keyboard found!");
     }
 
-    let driver = Box(ms1563::MS1563::new(api));
-    let mut keyboard = keyboard::new(driver);
+    let driver = Box::new(ms1563::MS1563::new(&api).unwrap());
+    let mut keyboard = keyboard::Keyboard::new(driver);
     //Listen for communication
     let listener = UnixListener::bind("/var/run/klm.sock");
 

@@ -44,7 +44,7 @@ impl MS1563 {
 }
 
 impl driver::Driver for MS1563{
-    fn new(api: hidapi::HidApi) -> Option<MS1563> {
+    fn new(api: &hidapi::HidApi) -> Option<MS1563> {
         log::i(TAG, "Opening MS1563 device");
         if let Ok(_device) = api.open(VENDOR_ID, PRODUCT_ID){
             Some(MS1563 {
@@ -60,7 +60,7 @@ impl driver::Driver for MS1563{
 
     //TODO: implement all methods
 
-    fn is_present(api: hidapi::HidApi) -> bool {
+    fn is_present(api: &hidapi::HidApi) -> bool {
         log::e(TAG, "is_present not implemented");
         true
     }
@@ -68,7 +68,7 @@ impl driver::Driver for MS1563{
     fn set_color(&self, color: &color::RGB, _brightness: u8) -> bool{
         let mut brightness = _brightness;
         if brightness > 10 {
-            log::w(TAG, &format!("Requested brightnesss it too big: {}", brightness));
+            log::w(TAG, &format!("Requested brightnesss is too big: {}", brightness));
             brightness = 10;
         }
         let mut buffer = MS1563::get_buffer();

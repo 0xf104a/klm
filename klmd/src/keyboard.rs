@@ -47,8 +47,8 @@ impl Keyboard {
     }
 
     pub fn sync(&self){
-        if !self.sync {
-            log::w("Sync is called, when keyboard syncing is off");
+        if !self.syncing {
+            log::w(TAG, "Sync is called, when keyboard syncing is off");
         }
         if self.state == KeyboardState::KEYBOARD_OFF {
             self.driver.set_power(false);
@@ -122,7 +122,7 @@ impl Keyboard {
         }
     }
 
-    pub reset_colors(&mut self){
+    pub fn reset_colors(&mut self){
         self.colors = vec![];
     }
 }
