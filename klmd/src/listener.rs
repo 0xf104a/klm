@@ -27,7 +27,7 @@ const TAG: &'static str = "listener";
 pub fn listen(keyboard: &mut keyboard::Keyboard){
     let listener = UnixListener::bind("/var/run/klmd.sock").unwrap();
 
-    std::fs::set_permissions("/var/run/klmd.sock", std::fs::Permissions::from_mode(0o655)).unwrap();
+    std::fs::set_permissions("/var/run/klmd.sock", std::fs::Permissions::from_mode(0o666)).unwrap();
 
     log::i(TAG, "Started listening at /var/run/klmd.sock");
 

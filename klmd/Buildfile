@@ -14,7 +14,7 @@ target_klmd(){
 }
 
 target_install(){
-    target_build
+    target_klmd
     require_root
     info "Cleaning up previous installations..."
     exec rm -f /usr/lib/systemd/system/klmd.service

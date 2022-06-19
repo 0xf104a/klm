@@ -3,6 +3,7 @@ Description=Keyboard light manager daemon
 
 [Service]
 ExecStart=/usr/sbin/klmd
+ExecStop=rm -f /var/run/klmd.sock
 Restart=always
 LimitNPROC=1
 # Security hardening
