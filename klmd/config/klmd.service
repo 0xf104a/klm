@@ -1,0 +1,21 @@
+[Unit]
+Description=Keyboard light manager daemon
+
+[Service]
+ExecStart=/usr/sbin/klmd
+Restart=always
+LimitNPROC=1
+# Security hardening
+AppArmorProfile=/etc/apparmod.d/klmd
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+
+
+#FIXME: WantedBy may be post-fs target, so klmd will be started
+#       earlier and can restore previous keyboard lightning state
+[Install]
+Alias=klmd
+WantedBy=multi-user.target
+
+

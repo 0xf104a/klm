@@ -1,0 +1,30 @@
+abi <abi/3.0>,
+
+include <tunables/global>
+
+profile klmd /usr/bin/klmd {
+        include <abstractions/base>
+        # Capabilities
+        capability net_raw,
+
+        # Network
+        network raw, #FIXME: do we really need such a broad network access?
+        deny network inet,
+        deny network inet6,
+
+        # Allow USB bus
+        /dev/bus/usb** rw,
+        /sys/bus/usb** rw,
+
+        # /sys/
+        /sys/bus** rw,
+        /sys/class** r,
+        /sys/devices/**/usb** rw,
+
+        # UDev
+        /run/udev/data/** r,
+
+        # Allow socket
+        /var/run/klmd.sock rw,
+        /run/klmd.sock rw,
+}

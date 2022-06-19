@@ -34,7 +34,14 @@ fn main(){
     log::w(TAG, "This version is early alpha and is not intended to be used in product mode. Many features are not yet implemnted.");
 
 
-    let api = hidapi::HidApi::new().unwrap();
+    let api = match hidapi::HidApi::new() {
+        Ok(api) => Some(api),
+        Err(e) => {
+            log::panic(TAG, &format!("Can not initialize HID API: {}", e));
+            None
+        },
+    }.unwrap();
+
 
     if !ms1563::MS1563::is_present(&api){
         log::e(TAG, "This program supports only MS1563 keyboards.");

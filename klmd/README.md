@@ -28,11 +28,12 @@ systemctl enable klmd
 
 ## API
 The daemon itself only listens for external communincation at UNIX-socket stream `/var/run/klmd.sock`.
-The protocol of communincation is as follows:
+The workflow of communincation is as follows:
 * Client opens connection to klmd
 * Client writes packet header: size of packet
 * Client writes packet data
 * klmd responses with status code for request
+* Client closes connection
 
 ### Packet structure
 Below table illustrates a structure of a request to klmd:
@@ -88,12 +89,15 @@ Here you can find examples of how to design packets for klmd.
 |...|0x1     |n                |r1,g1,b1|...    |rn,gn,bn|...   |
 
 ### Mode changing
-|...|Command |Mode   |
-|---|--------|-------|
-|...|1 byte  |1 byte |
-|...|0x5     |mode   |
+|...|Command |Mode   |...|
+|---|--------|-------|---|
+|...|1 byte  |1 byte |...|
+|...|0x5     |mode   |...|
 
 ## TODO
-* [ ] Systemd, AppArmor, build.sh
+* [x] Systemd, AppArmor, build.sh
 * [ ] Dynamically loadable drivers
 * [ ] Keyboard features
+* [ ] Keyboard state caching
+* [ ] Proper UNIX-signal handling
+* [ ] Signal handlings

@@ -15,6 +15,7 @@ use crate::util::log;
 use crate::keyboard;
 
 use std::os::unix::net::UnixListener;
+use std::os::unix::fs::PermissionsExt;
 use std::io::prelude::*;
 
 const TAG: &'static str = "listener";
@@ -25,6 +26,8 @@ const TAG: &'static str = "listener";
 //TODO: check errors in listen
 pub fn listen(keyboard: &mut keyboard::Keyboard){
     let listener = UnixListener::bind("/var/run/klmd.sock").unwrap();
+
+    std::fs::set_permissions("/var/run/klmd.sock", std::fs::Permissions::from_mode(0o655)).unwrap();
 
     log::i(TAG, "Started listening at /var/run/klmd.sock");
 

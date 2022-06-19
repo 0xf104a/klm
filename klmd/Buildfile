@@ -1,0 +1,28 @@
+CARGO_OPTIONS=""
+RELEASE_TYPE="debug"
+
+target_klmd(){
+    info "Build klmd-$RELEASE_TYPE using cargo"
+    if [ $RELEASE_TYPE=="debug" ]; then
+        exec "cargo build $CARGO_OPTIONS"
+    elif [ $RELEASE_TYPE=="release" ]; then
+        exec "cargo build --release $CARGO_OPTIONS"
+    else
+        error "Unknown release type: $RELEASE_TYPE"
+    fi
+    success "Succesfully built klmd"
+}
+
+target_install(){
+    target_build
+    require_root
+    info "Cleaning up previous installations..."
+    exec rm -f /usr/lib/systemd/system/klmd.service
+    exec rm -f /etc/apparmor.d/klmd
+    exec rm -f /usr/bin/klmd
+    info "Installing klmd..."
+    exec cp config/klmd /etc/apparmor.d/klmd
+    exec cp config/klmd.service /usr/lib/systemd/system/klmd.service
+    exec cp target/$RELEASE_TYPE/klmd /usr/bin/klmd
+    success "Succesfully install klmd"
+}
