@@ -15,6 +15,7 @@ mod drivers;
 mod util;
 mod keyboard;
 mod proto;
+mod listener;
 
 
 use std::os::unix::net::UnixListener;
@@ -29,7 +30,7 @@ const TAG: &'static str = "main";
 const VERSION: &'static str = "0.1.1"; //TODO: synchronize with cargo?
 
 fn main(){
-    log::i(TAG, &format!("klmd versiom {} starting.", VERSION));
+    log::i(TAG, &format!("klmd version {} starting.", VERSION));
     log::w(TAG, "This version is early alpha and is not intended to be used in product mode. Many features are not yet implemnted.");
 
 
@@ -42,9 +43,6 @@ fn main(){
 
     let driver = Box::new(ms1563::MS1563::new(&api).unwrap());
     let mut keyboard = keyboard::Keyboard::new(driver);
-    //Listen for communication
-    let listener = UnixListener::bind("/var/run/klm.sock");
-
-
+    listener::listen(&mut keyboard);
 
 }

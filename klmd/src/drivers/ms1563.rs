@@ -22,7 +22,6 @@ const PRODUCT_ID: u16 = 0x1563;
 
 pub struct MS1563{
     device: hidapi::HidDevice,
-    brightness: u8,
 }
 
 impl MS1563 {
@@ -49,7 +48,6 @@ impl driver::Driver for MS1563{
         if let Ok(_device) = api.open(VENDOR_ID, PRODUCT_ID){
             Some(MS1563 {
                 device: _device,
-                brightness: 10,
             })
         } else {
             log::e(TAG,"Opening device failed. Check that program has right access rights.");
