@@ -125,4 +125,5 @@ impl Keyboard {
     pub fn reset_colors(&mut self){
         self.colors = vec![];
     }
+
 }

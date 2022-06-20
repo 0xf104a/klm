@@ -24,6 +24,11 @@ const TAG: &'static str = "listener";
 //and reads to buffer requests. Then it passes
 //buffer to protocol handler.
 //TODO: check errors in listen
+//FIXME: reading via temporate 1-byte buffer.
+//       No way to workaround this currently:
+//        Reading to EOF => system DoS
+//        Reading exact size to dynamically allocated buffer => unsafe?
+
 pub fn listen(keyboard: &mut keyboard::Keyboard){
     let listener = UnixListener::bind("/var/run/klmd.sock").unwrap();
 
@@ -37,12 +42,17 @@ pub fn listen(keyboard: &mut keyboard::Keyboard){
                 log::d(TAG, &format!("Received connection from {:?} - {:?}", sock, addr));
                 let mut size_buffer = [0; 1];
                 let mut response = [0; 1];
+                let mut data_buffer = [0; 1];
                 sock.read_exact(&mut size_buffer);
 
                 let sz = size_buffer[0];
+                log::d(TAG, &format!("Expecting request size to be {} bytes", sz));
                 if(sz > 0){
                     let mut buffer = Vec::<u8>::with_capacity(sz as usize);
-                    sock.read_exact(&mut buffer);
+                    for _ in 0..sz {
+                        sock.read_exact(&mut data_buffer);
+                        buffer.push(data_buffer[0]);
+                    }
                     let result = proto::proto_handle_message(keyboard, &buffer);
                     response[0] = result.to_u8();
                     sock.write_all(&response);

@@ -1,5 +1,5 @@
 [Unit]
-Description=Keyboard light manager daemon
+Description=keyboard light manager daemon
 
 [Service]
 ExecStart=/usr/sbin/klmd

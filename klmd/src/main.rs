@@ -42,7 +42,7 @@ fn main(){
         },
     }.unwrap();
 
-
+    //TODO: here the dynamic loading of drivers should happen
     if !ms1563::MS1563::is_present(&api){
         log::e(TAG, "This program supports only MS1563 keyboards.");
         log::panic(TAG, "No compatiable keyboard found!");

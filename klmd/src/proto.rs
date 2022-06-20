@@ -169,6 +169,7 @@ fn proto_handle_set_mode(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mu
         log::e(TAG, "bad request: expected mode specification, got end of message");
     }
     let b = buffer[buffer_ptr];
+    log::d(TAG, &format!("set_mode: {}", b));
     if let Some(mode) = ProtoKeyboardMode::from_u8(b) {
         keyboard.set_state(mode.to_state());
     } else {
@@ -193,7 +194,12 @@ fn proto_handle_set_lock(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mu
 
 pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>) -> ProtoResponse{
     let mut buffer_ptr = 0;
+    if(buffer.len() == 0){
+        log::e(TAG, "bad reqeust: empty buffer. This is a bug: must be handled earlier.");
+        return ProtoResponse::RESULT_ERROR;
+    }
     keyboard.lock_sync();
+    //log::d(TAG, &format!("buffer={}", buffer));
     while buffer_ptr < buffer.len() {
         let cmd_byte = buffer[buffer_ptr];
         buffer_ptr += 1;
@@ -203,6 +209,7 @@ pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>)
             return ProtoResponse::RESULT_BAD_REQUEST;
         }
         let cmd = cmd_wrapped.unwrap();
+        log::d(TAG, &format!("cmd={}", cmd_byte));
         if cmd == ProtoCmd::CMD_COLORS {
             buffer_ptr = proto_handle_colors(keyboard, buffer, buffer_ptr);
         } else if cmd == ProtoCmd::CMD_SET_COLOR {
