@@ -1,9 +1,19 @@
+ # This file is part of pyklm project.
+ #
+ #  Copyright 2022 by Polar <toddot@protonmail.com>
+ #
+ #  Licensed under GNU General Public License 3.0 or later.
+ #  Some rights reserved. See COPYING, AUTHORS.
+ #
+ # @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
+
 import socket
 import os
 from enum import Enum
 
 from pyklm.rgb import RGB
 from pyklm.util import byteargs
+from pyklm.mode import KeyboardMode
 
 class KLMError(Exception):
     pass
@@ -13,13 +23,14 @@ class KLMResult(Enum):
     RESULT_ERROR = 0x1
     RESULT_BAD_REQUEST = 0x2
 
+    @byteargs
     def from_byte(byte: int):
         if byte == 0x0:
-            return self.RESULT_OK
+            return KLMResult.RESULT_OK
         elif byte == 0x1:
-            return self.RESULT_ERROR
+            return KLMResult.RESULT_ERROR
         elif byte == 0x2:
-            return self.RESULT_BAD_REQUEST
+            return KLMResult.RESULT_BAD_REQUEST
         else:
             raise ValueError(f"Bad status code: {byte}")
 
@@ -49,6 +60,37 @@ class KLMConnection:
         self.staged += color.to_bytearray()
         self.size += 4
 
+    @byteargs
+    def set_brightness(self, brightness: int):
+        """
+         Stages set brightness command.
+
+         :param brightness: int: brightness level(0-255)
+        """
+        self.staged += bytearray([0x03])
+        self.staged += bytearray([brightness])
+        self.size += 2
+
+    def set_mode(self, mode: KeyboardMode):
+        """
+         Stages command to setting mode
+
+         :param mode: KeyboardMode: mode to use
+        """
+        self.staged += bytearray([0x05])
+        self.staged += bytearray([mode.value])
+        self.size += 2
+
+    def add_color(self, color: RGB):
+        """
+         Stages add color command.
+
+         :param color: RGB: color to add
+        """
+        self.staged += bytearray([0x02])
+        self.staged += color.to_bytearray()
+        self.size += 4
+
     def commit(self) -> KLMResult:
         """
          Commits staged changes to daemon.
@@ -65,5 +107,7 @@ class KLMConnection:
         sock.connect("/var/run/klmd.sock")
         sock.send(bytearray([self.size]))
         sock.send(self.staged)
-        return KLMResult.from_byte(sock.recv(1)[0])
+        result = KLMResult.from_byte(sock.recv(1)[0])
+        sock.close()
+        return result
 

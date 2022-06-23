@@ -51,8 +51,8 @@ Colors are alway encoded as RGB byte triplet(see table below)
 ### Command table
 |Command |Arguments        |Description |
 |--------|-----------------|------------|
-|0x0     | Color           | Sets primary color, resets stored colors |
-|0x1     | n, then n colors| Sets vector of stored color to given n colors|
+|0x0     | n, then n colors| Sets vector of stored color to given n colors|
+|0x1     | Color           | Sets primary color, resets stored colors |
 |0x2     | Color           | Adds color to stored colors vector |
 |0x3     | Brightness      | Set keyboard Brightness |
 |0x4     | Speed           | Set keyboard speed for color shift or breathe mode |
