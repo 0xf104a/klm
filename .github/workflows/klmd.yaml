@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Install packages
+      run: apt-get -y install libusb-1.0-0-dev
     - name: Build
       working-directory: klmd/
       run: cargo build --verbose
