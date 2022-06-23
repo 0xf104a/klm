@@ -14,6 +14,7 @@ use crate::util::color;
 use crate::util::log;
 
 const TAG: &'static str = "keyboard";
+const CACHE_FILENAME: &'static str = "/var/cache/klm.state";
 
 #[derive(PartialEq)]
 pub enum KeyboardState{
@@ -23,6 +24,36 @@ pub enum KeyboardState{
     KEYBOARD_COLOR_SHIFT,
 }
 
+//Implements a KeyboardState which can be serialization/desearliazation
+impl KeyboardState{
+    pub fn from_u8(byte: u8) -> Option<KeyboardState> {
+        if byte == 0x0 {
+            Some(KeyboardState::KEYBOARD_OFF)
+        }else if byte == 0x01 {
+            Some(KeyboardState::KEYBOARD_STEADY)
+        }else if byte == 0x02 {
+            Some(KeyboardState::KEYBOARD_BREATHING)
+        }else if byte == 0x03 {
+            Some(KeyboardState::KEYBOARD_COLOR_SHIFT)
+        }else{
+            None
+        }
+    }
+
+    pub fn to_u8(state: KeyboardState) -> u8 {
+        if state == KeyboardState::KEYBOARD_OFF {
+            0x0
+        } else if state == KeyboardState::KEYBOARD_STEADY {
+            0x01
+        } else if state == KeyboardState::KEYBOARD_BREATHING {
+            0x02
+        } else if state == KeyboardState::KEYBOARD_COLOR_SHIFT {
+            0x03
+        } else {
+            todo!("to_u8 unimplemented state");
+        }
+    }
+}
 //Implements a controller which stores state of keyboard
 //and communicates with driver
 pub struct Keyboard{
@@ -124,6 +155,10 @@ impl Keyboard {
 
     pub fn reset_colors(&mut self){
         self.colors = vec![];
+    }
+
+    fn save_state() -> bool {
+        todo!();
     }
 
 }
