@@ -24,6 +24,7 @@ class KLMResult(Enum):
     RESULT_BAD_REQUEST = 0x2
 
     @byteargs
+    @staticmethod
     def from_byte(byte: int):
         if byte == 0x0:
             return KLMResult.RESULT_OK
