@@ -13,10 +13,16 @@ use crate::drivers::driver;
 use crate::util::color;
 use crate::util::log;
 
+use std::io::Write;
+use std::io::prelude::*;
+use std::fs::File;
+
 const TAG: &'static str = "keyboard";
 const CACHE_FILENAME: &'static str = "/var/cache/klm.state";
 
 #[derive(PartialEq)]
+#[derive(Clone)]
+#[derive(Copy)]
 pub enum KeyboardState{
     KEYBOARD_OFF,
     KEYBOARD_STEADY,
@@ -50,7 +56,7 @@ impl KeyboardState{
         } else if state == KeyboardState::KEYBOARD_COLOR_SHIFT {
             0x03
         } else {
-            todo!("to_u8 unimplemented state");
+            todo!("to_u8: unimplemented state");
         }
     }
 }
@@ -157,8 +163,25 @@ impl Keyboard {
         self.colors = vec![];
     }
 
-    fn save_state() -> bool {
-        todo!();
+    fn save_state(&self) -> bool {
+        //Prepare buffer
+        let mut buffer = Vec::<u8>::new();
+        buffer.push(self.brightness);
+        buffer.push(self.speed);
+        buffer.push(KeyboardState::to_u8(self.state));
+        if(self.colors.len() > 255){
+            log::panic(TAG, "Too many colors. Maybe a bug?");
+        }
+        buffer.push(self.colors.len().try_into().unwrap());
+        for color in &self.colors {
+            buffer.push(color.r);
+            buffer.push(color.g);
+            buffer.push(color.b);
+        }
+        //Write to buffer to file
+        let mut file = File::create(CACHE_FILENAME).expect("Unable to create file");
+        file.write_all(&buffer).expect("Unable to write buffer");
+        true
     }
 
 }

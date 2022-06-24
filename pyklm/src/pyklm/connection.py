@@ -92,6 +92,9 @@ class KLMConnection:
         self.staged += color.to_bytearray()
         self.size += 4
 
+    @byteargs
+    def set_speed(self, speed: int):
+        self.staged += 
     def commit(self) -> KLMResult:
         """
          Commits staged changes to daemon.
@@ -112,3 +115,9 @@ class KLMConnection:
         sock.close()
         return result
 
+    def reset(self):
+        """
+         Removes staged commands from connection.
+        """
+        self.staged = bytearray([])
+        self.size = 0
