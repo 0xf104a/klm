@@ -7,7 +7,7 @@ def example(number: int):
 def test_byteargs_positive():
     example(16)
 
-def test_byteargs_positive():
+def test_byteargs_negative():
     try:
         example(256)
         return False

@@ -94,7 +94,10 @@ class KLMConnection:
 
     @byteargs
     def set_speed(self, speed: int):
-        self.staged += 
+        self.staged += bytearray([0x4])
+        self.staged += bytearray([speed])
+        self.size += 2
+
     def commit(self) -> KLMResult:
         """
          Commits staged changes to daemon.
