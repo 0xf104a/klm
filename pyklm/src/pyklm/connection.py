@@ -44,13 +44,6 @@ class KLMConnection:
         self.staged = bytearray()
         self.size = 0
 
-    def reset(self):
-        """
-         Resets connection for re-use
-        """
-        self.stage = bytearray()
-        self.size = 0
-
     def set_color(self, color: RGB):
         """
          Stages set color command.
