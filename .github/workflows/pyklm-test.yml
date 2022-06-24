@@ -24,7 +24,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pytest
-    - name: Analysing the pyklm module with pylint
+    - name: Testing pyklm library
       working-directory: pyklm/src/
       run: |
         pytest pyklm
