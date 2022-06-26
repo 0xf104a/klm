@@ -27,4 +27,7 @@ profile klmd /usr/bin/klmd {
         # Allow socket
         /var/run/klmd.sock rw,
         /run/klmd.sock rw,
+
+        # Allow caching
+        /var/cache/klm/** rw,
 }

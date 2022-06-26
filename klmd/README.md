@@ -97,7 +97,6 @@ Here you can find examples of how to design packets for klmd.
 ## TODO
 * [x] Systemd, AppArmor, build.sh
 * [ ] Dynamically loadable drivers
-* [ ] Keyboard features
-* [ ] Keyboard state caching
+* [ ] Ability for clients to get keyboard features
+* [x] Keyboard state caching
 * [ ] Proper UNIX-signal handling
-* [ ] Signal handlings

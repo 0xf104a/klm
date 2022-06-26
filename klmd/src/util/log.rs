@@ -9,6 +9,8 @@
  * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
  */
 
+static loglvl: u8 = 0b01111000;
+
 pub enum LogLevel {
     DEBUG,
     INFO,
@@ -21,15 +23,36 @@ impl LogLevel {
     fn to_s(&self) -> &str {
         match *self {
             LogLevel::DEBUG => "D",
-            LogLevel::INFO => "I",
-            LogLevel::WARN => "W",
+            LogLevel::INFO  => "I",
+            LogLevel::WARN  => "W",
             LogLevel::ERROR => "E",
             LogLevel::PANIC => "P",
         }
     }
+
+    pub fn to_u8(&self) -> u8 {
+        match *self {
+            LogLevel::DEBUG => 0b10000000,
+            LogLevel::INFO  => 0b01000000,
+            LogLevel::WARN  => 0b00100000,
+            LogLevel::ERROR => 0b00010000,
+            LogLevel::PANIC => 0b00001000,
+        }
+    }
+}
+
+fn is_present(level: &LogLevel) -> bool{
+    if loglvl & level.to_u8() != 0 {
+        true
+    } else {
+        false
+    }
 }
 
 pub fn log_print(level: LogLevel, tag: &str, msg: &str){
+    if !is_present(&level){
+        return ;
+    }
     println!("{level}/{tag}: {msg}", level=level.to_s(), tag=tag, msg=msg);
 }
 
@@ -53,3 +76,5 @@ pub fn panic(tag: &str, msg: &str){
     log_print(LogLevel::PANIC, tag, msg);
     panic!("Program panicked because of module: {module}", module=tag);
 }
+
+

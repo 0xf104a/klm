@@ -16,9 +16,10 @@ use crate::util::log;
 use std::io::Write;
 use std::io::prelude::*;
 use std::fs::File;
+use std::path::Path;
 
 const TAG: &'static str = "keyboard";
-const CACHE_FILENAME: &'static str = "/var/cache/klm.state";
+const CACHE_FILENAME: &'static str = "/var/cache/klm/klm.state";
 
 #[derive(PartialEq)]
 #[derive(Clone)]
@@ -145,7 +146,7 @@ impl Keyboard {
         }
     }
 
-    pub fn set_brightness(&mut self, brightness: u8){
+        pub fn set_brightness(&mut self, brightness: u8){
         self.brightness = brightness;
         if self.syncing {
             self.sync();
@@ -163,7 +164,7 @@ impl Keyboard {
         self.colors = vec![];
     }
 
-    fn save_state(&self) -> bool {
+    pub fn save_state(&self) -> bool {
         //Prepare buffer
         let mut buffer = Vec::<u8>::new();
         buffer.push(self.brightness);
@@ -182,6 +183,35 @@ impl Keyboard {
         let mut file = File::create(CACHE_FILENAME).expect("Unable to create file");
         file.write_all(&buffer).expect("Unable to write buffer");
         true
+    }
+
+    fn load_state(&mut self) -> bool {
+        let mut file = File::open(CACHE_FILENAME).expect("Unable to open file");
+        let mut state_buffer = [0u8; 1];
+        let mut color_buffer = [0u8; 3];
+        file.read_exact(&mut state_buffer);
+        self.brightness = state_buffer[0];
+        file.read_exact(&mut state_buffer);
+        self.speed = state_buffer[0];
+        file.read_exact(&mut state_buffer);
+        self.state = KeyboardState::from_u8(state_buffer[0]).expect("Bad state specifier");
+        file.read_exact(&mut state_buffer);
+        let n = state_buffer[0];
+        self.colors = Vec::<color::RGB>::new();
+        for _ in 0..n {
+            file.read_exact(&mut color_buffer);
+            self.colors.push(color::RGB::new(color_buffer[0], color_buffer[1], color_buffer[2]));
+        }
+        true
+    }
+
+    pub fn load_state_if_exists(&mut self) -> bool{
+        if Path::new(CACHE_FILENAME).exists() {
+            log::i(TAG, &format!("Loading previous keyboard state from {}", CACHE_FILENAME));
+            self.load_state()
+        } else {
+            false
+        }
     }
 
 }

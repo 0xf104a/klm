@@ -27,11 +27,11 @@ use crate::util::log;
 use crate::util::color::RGB;
 
 const TAG: &'static str = "main";
-const VERSION: &'static str = "0.1.1"; //TODO: synchronize with cargo?
+const VERSION: &'static str = "0.1.2"; //TODO: synchronize with cargo?
 
 fn main(){
     log::i(TAG, &format!("klmd version {} starting.", VERSION));
-    log::w(TAG, "This version is early alpha and is not intended to be used in product mode. Many features are not yet implemnted.");
+    log::w(TAG, "This version is early alpha and is not intended to be used in production mode. Many features are not yet implemnted.");
 
 
     let api = match hidapi::HidApi::new() {
@@ -50,6 +50,8 @@ fn main(){
 
     let driver = Box::new(ms1563::MS1563::new(&api).unwrap());
     let mut keyboard = keyboard::Keyboard::new(driver);
+    keyboard.load_state_if_exists();
+    keyboard.sync();
     listener::listen(&mut keyboard);
 
 }

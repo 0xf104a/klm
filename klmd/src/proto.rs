@@ -230,6 +230,7 @@ pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>)
             return ProtoResponse::RESULT_BAD_REQUEST;
         }
     }
+    keyboard.save_state();
     keyboard.unlock_sync();
     keyboard.sync();
     ProtoResponse::RESULT_OK

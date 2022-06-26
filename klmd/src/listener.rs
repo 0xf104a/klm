@@ -24,10 +24,6 @@ const TAG: &'static str = "listener";
 //and reads to buffer requests. Then it passes
 //buffer to protocol handler.
 //TODO: check errors in listen
-//FIXME: reading via temporate 1-byte buffer.
-//       No way to workaround this currently:
-//        Reading to EOF => system DoS
-//        Reading exact size to dynamically allocated buffer => unsafe?
 
 pub fn listen(keyboard: &mut keyboard::Keyboard){
     let listener = UnixListener::bind("/var/run/klmd.sock").unwrap();
