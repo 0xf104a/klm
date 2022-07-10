@@ -82,6 +82,7 @@ impl Keyboard {
             brightness: 0,
             speed: 0,
             syncing: false,
+            power: false,
         }
     }
 
@@ -179,7 +180,11 @@ impl Keyboard {
         buffer.push(self.brightness);
         buffer.push(self.speed);
         buffer.push(KeyboardState::to_u8(self.state));
-        buffer.push(self.power);
+        if self.power{
+            buffer.push(0x01);
+        } else {
+            buffer.push(0x00);
+        }
         if(self.colors.len() > 255){
             log::panic(TAG, "Too many colors. Maybe a bug?");
         }
@@ -206,12 +211,18 @@ impl Keyboard {
         //Read speed
         file.read_exact(&mut state_buffer);
         self.speed = state_buffer[0];
-        file.read_exact(&mut state_buffer);
         //Read state
+        file.read_exact(&mut state_buffer);
         self.state = KeyboardState::from_u8(state_buffer[0]).expect("Bad state specifier");
         //Read power
         file.read_exact(&mut state_buffer);
-        self.power = state_buffer[0];
+        let power_byte = state_buffer[0];
+        if power_byte == 0x0 {
+            self.power = false;
+        } else {
+            self.power = true;
+        }
+        //Read number of colors
         file.read_exact(&mut state_buffer);
         let n = state_buffer[0];
         self.colors = Vec::<color::RGB>::new();

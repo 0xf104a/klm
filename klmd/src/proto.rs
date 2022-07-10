@@ -206,6 +206,7 @@ fn proto_handle_set_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, m
     } else {
        keyboard.set_power(true);
     }
+    buffer_ptr + 1
 }
 
 pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>) -> ProtoResponse{
@@ -241,7 +242,7 @@ pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>)
         } else if cmd == ProtoCmd::CMD_SYNC_STATE {
             buffer_ptr = proto_handle_set_lock(keyboard, buffer, buffer_ptr);
         } else if cmd == ProtoCmd::CMD_POWER {
-            buffer_ptr = proto_handle_set_power(keyboar, buffer, buffer_ptr);
+            buffer_ptr = proto_handle_set_power(keyboard, buffer, buffer_ptr);
         }
         if(buffer_ptr == 0) {
             log::e(TAG, "proto_handle_message: parsing message failed.");
