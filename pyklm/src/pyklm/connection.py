@@ -96,7 +96,7 @@ class KLMConnection:
         self.staged += bytearray([speed])
         self.size += 2
 
-    det set_power(self, power: bool):
+    def set_power(self, power: bool):
         self.staged += bytearray([0x07])
         if power:
             self.staged += bytearray([0x01])
