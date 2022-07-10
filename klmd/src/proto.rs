@@ -24,6 +24,7 @@ pub enum ProtoCmd {
     CMD_SPEED,
     CMD_MODE,
     CMD_SYNC_STATE,
+    CMD_POWER,
 }
 
 #[derive(PartialEq)]
@@ -57,6 +58,8 @@ impl ProtoCmd {
             Some(ProtoCmd::CMD_MODE)
         } else if cmd == 0x06 {
             Some(ProtoCmd::CMD_SYNC_STATE)
+        } else if cmd == 0x07{
+            Some(ProtoCmd::CMD_POWER)
         } else {
             None
         }
@@ -167,6 +170,7 @@ fn proto_handle_set_speed(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, m
 fn proto_handle_set_mode(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize {
     if buffer_ptr >= buffer.len() {
         log::e(TAG, "bad request: expected mode specification, got end of message");
+        return 0;
     }
     let b = buffer[buffer_ptr];
     log::d(TAG, &format!("set_mode: {}", b));
@@ -181,7 +185,7 @@ fn proto_handle_set_mode(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mu
 
 fn proto_handle_set_lock(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize {
     if buffer_ptr >= buffer.len() {
-        log::e(TAG, "bad request expected lock specification, got end of message");
+        log::e(TAG, "bad request: expected lock specification, got end of message");
     }
     let b = buffer[buffer_ptr];
     if b == 0 {
@@ -190,6 +194,18 @@ fn proto_handle_set_lock(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mu
         keyboard.lock_sync();
     }
     buffer_ptr + 1
+}
+
+fn proto_handle_set_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize {
+    if buffer_ptr >= buffer.len() {
+        log::e(TAG, "bad request: expected power specification, got end of message");
+    }
+    let b = buffer[buffer_ptr];
+    if b == 0 {
+       keyboard.set_power(false);
+    } else {
+       keyboard.set_power(true);
+    }
 }
 
 pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>) -> ProtoResponse{
@@ -224,6 +240,8 @@ pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>)
             buffer_ptr = proto_handle_set_mode(keyboard, buffer, buffer_ptr);
         } else if cmd == ProtoCmd::CMD_SYNC_STATE {
             buffer_ptr = proto_handle_set_lock(keyboard, buffer, buffer_ptr);
+        } else if cmd == ProtoCmd::CMD_POWER {
+            buffer_ptr = proto_handle_set_power(keyboar, buffer, buffer_ptr);
         }
         if(buffer_ptr == 0) {
             log::e(TAG, "proto_handle_message: parsing message failed.");

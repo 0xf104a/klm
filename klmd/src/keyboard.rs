@@ -70,6 +70,7 @@ pub struct Keyboard{
     brightness: u8,
     speed: u8,
     syncing: bool,
+    power: bool,
 }
 
 impl Keyboard {
@@ -87,6 +88,10 @@ impl Keyboard {
     pub fn sync(&self){
         if !self.syncing {
             log::w(TAG, "Sync is called, when keyboard syncing is off");
+        }
+        if !self.power {
+            self.driver.set_power(false);
+            return ;
         }
         if self.state == KeyboardState::KEYBOARD_OFF {
             self.driver.set_power(false);
@@ -164,12 +169,17 @@ impl Keyboard {
         self.colors = vec![];
     }
 
+    pub fn set_power(&mut self, power: bool){
+        self.power = power;
+    }
+
     pub fn save_state(&self) -> bool {
         //Prepare buffer
         let mut buffer = Vec::<u8>::new();
         buffer.push(self.brightness);
         buffer.push(self.speed);
         buffer.push(KeyboardState::to_u8(self.state));
+        buffer.push(self.power);
         if(self.colors.len() > 255){
             log::panic(TAG, "Too many colors. Maybe a bug?");
         }
@@ -185,16 +195,23 @@ impl Keyboard {
         true
     }
 
+
     fn load_state(&mut self) -> bool {
         let mut file = File::open(CACHE_FILENAME).expect("Unable to open file");
         let mut state_buffer = [0u8; 1];
         let mut color_buffer = [0u8; 3];
+        //Read Brightness
         file.read_exact(&mut state_buffer);
         self.brightness = state_buffer[0];
+        //Read speed
         file.read_exact(&mut state_buffer);
         self.speed = state_buffer[0];
         file.read_exact(&mut state_buffer);
+        //Read state
         self.state = KeyboardState::from_u8(state_buffer[0]).expect("Bad state specifier");
+        //Read power
+        file.read_exact(&mut state_buffer);
+        self.power = state_buffer[0];
         file.read_exact(&mut state_buffer);
         let n = state_buffer[0];
         self.colors = Vec::<color::RGB>::new();

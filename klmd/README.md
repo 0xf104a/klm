@@ -57,7 +57,7 @@ Colors are alway encoded as RGB byte triplet(see table below)
 |0x3     | Brightness      | Set keyboard Brightness |
 |0x4     | Speed           | Set keyboard speed for color shift or breathe mode |
 |0x5     | Mode            | Set keyboard mode |
-|0x6     | Power           | Set keyboard power |
+|0x7     | Power           | Set keyboard power |
 
 **NOTE**: Speed, mode, power and brightness are 1-byte values(see tables below).
 
@@ -67,7 +67,7 @@ Power argument possible values.
 |Value |Description |
 |------|------------|
 |0x0   |Power-off   |
-|0x1   |Power-on(not currently supported) |
+|0x1   |Power-on    |
 
 **NOTE**: to power-on keyboard currently mode should be sent as keyboard state is not yet cached.
 
