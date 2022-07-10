@@ -87,8 +87,21 @@ class KLMConnection:
 
     @byteargs
     def set_speed(self, speed: int):
-        self.staged += bytearray([0x4])
+        """
+         Sets speed of color shift or keyboard breathe.
+
+         :param: speed: int: speed in a byte range(0-255)
+        """
+        self.staged += bytearray([0x04])
         self.staged += bytearray([speed])
+        self.size += 2
+
+    det set_power(self, power: bool):
+        self.staged += bytearray([0x07])
+        if power:
+            self.staged += bytearray([0x01])
+        else:
+            self.staged += bytearray([0x00])
         self.size += 2
 
     def commit(self) -> KLMResult:
