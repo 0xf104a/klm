@@ -25,6 +25,7 @@ pub enum ProtoCmd {
     CMD_MODE,
     CMD_SYNC_STATE,
     CMD_POWER,
+    CMD_TOGGLE,
 }
 
 #[derive(PartialEq)]
@@ -60,6 +61,8 @@ impl ProtoCmd {
             Some(ProtoCmd::CMD_SYNC_STATE)
         } else if cmd == 0x07{
             Some(ProtoCmd::CMD_POWER)
+        } else if cmd == 0x08{
+            Some(ProtoCmd::CMD_TOGGLE)
         } else {
             None
         }
@@ -186,6 +189,7 @@ fn proto_handle_set_mode(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mu
 fn proto_handle_set_lock(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize {
     if buffer_ptr >= buffer.len() {
         log::e(TAG, "bad request: expected lock specification, got end of message");
+        return 0;
     }
     let b = buffer[buffer_ptr];
     if b == 0 {
@@ -195,6 +199,8 @@ fn proto_handle_set_lock(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mu
     }
     buffer_ptr + 1
 }
+
+
 
 fn proto_handle_set_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize {
     if buffer_ptr >= buffer.len() {
@@ -207,6 +213,16 @@ fn proto_handle_set_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, m
        keyboard.set_power(true);
     }
     buffer_ptr + 1
+}
+
+
+fn proto_handle_toggle_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize {
+    if buffer_ptr >= buffer.len() {
+        log::e(TAG, "bad request: buffer_ptr is out of range");
+        return 0;
+    }
+    keyboard.toggle_power();
+    buffer_ptr
 }
 
 pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>) -> ProtoResponse{
@@ -243,6 +259,8 @@ pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>)
             buffer_ptr = proto_handle_set_lock(keyboard, buffer, buffer_ptr);
         } else if cmd == ProtoCmd::CMD_POWER {
             buffer_ptr = proto_handle_set_power(keyboard, buffer, buffer_ptr);
+        } else if cmd == ProtoCmd::CMD_TOGGLE {
+            buffer_ptr = proto_handle_power_toggle(keyboard, buffer, buffer_ptr);
         }
         if(buffer_ptr == 0) {
             log::e(TAG, "proto_handle_message: parsing message failed.");

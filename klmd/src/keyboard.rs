@@ -174,6 +174,10 @@ impl Keyboard {
         self.power = power;
     }
 
+    pub fn toggle_power(&mut self) {
+        self.power = !power;
+        self.sync();
+    }
     pub fn save_state(&self) -> bool {
         //Prepare buffer
         let mut buffer = Vec::<u8>::new();
