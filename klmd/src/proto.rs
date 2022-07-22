@@ -260,7 +260,7 @@ pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>)
         } else if cmd == ProtoCmd::CMD_POWER {
             buffer_ptr = proto_handle_set_power(keyboard, buffer, buffer_ptr);
         } else if cmd == ProtoCmd::CMD_TOGGLE {
-            buffer_ptr = proto_handle_power_toggle(keyboard, buffer, buffer_ptr);
+            buffer_ptr = proto_handle_toggle_power(keyboard, buffer, buffer_ptr);
         }
         if(buffer_ptr == 0) {
             log::e(TAG, "proto_handle_message: parsing message failed.");

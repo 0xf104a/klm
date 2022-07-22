@@ -175,7 +175,7 @@ impl Keyboard {
     }
 
     pub fn toggle_power(&mut self) {
-        self.power = !power;
+        self.power = !self.power;
         self.sync();
     }
     pub fn save_state(&self) -> bool {
