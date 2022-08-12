@@ -104,6 +104,13 @@ class KLMConnection:
             self.staged += bytearray([0x00])
         self.size += 2
 
+    def toggle(self):
+        """
+         Toggles power of keyboard.
+        """
+        self.staged += bytearray([0x08])
+        self.size += 1
+
     def commit(self) -> KLMResult:
         """
          Commits staged changes to daemon.
