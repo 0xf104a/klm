@@ -230,6 +230,15 @@ fn proto_handle_toggle_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>
     buffer_ptr
 }
 
+fn proto_handle_request_modes(keyboard: &keyboard::Keyboard, buffer: &Vec<u8>, buffer_ptr: usize) -> usize {
+    if buffer_ptr >= buffer.len() {
+        log::e(TAG, "bad request: buffer_ptr is out of range");
+        return 0;
+    }
+    let modes = keyboard.get_color_modes();
+    buffer_ptr
+}
+
 pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>) -> ProtoResponseState {
     let mut buffer_ptr = 0;
     if buffer.len() == 0 {
@@ -266,6 +275,8 @@ pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>)
             buffer_ptr = proto_handle_set_power(keyboard, buffer, buffer_ptr);
         } else if cmd == ProtoCmd::CmdToggle {
             buffer_ptr = proto_handle_toggle_power(keyboard, buffer, buffer_ptr);
+        } else if cmd == ProtoCmd::CmdReqModesAvail {
+            buffer_ptr = proto_handle_request_modes(keyboard, buffer, buffer_ptr);
         }
         if buffer_ptr == 0 {
             log::e(TAG, "proto_handle_message: parsing message failed.");

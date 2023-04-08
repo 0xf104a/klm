@@ -17,6 +17,7 @@ use std::io::Write;
 use std::io::prelude::*;
 use std::fs::File;
 use std::path::Path;
+use crate::drivers::driver::KeyboardMode;
 
 const TAG: &'static str = "keyboard";
 const CACHE_FILENAME: &'static str = "/var/cache/klm/klm.state";
@@ -245,5 +246,9 @@ impl Keyboard {
         } else {
             false
         }
+    }
+
+    pub fn get_color_modes(&self) -> Vec<KeyboardMode>{
+        self.driver.get_modes()
     }
 }

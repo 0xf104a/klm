@@ -13,6 +13,7 @@ use crate::util::color;
 
 //use hidapi::HidApi;
 
+#[derive(Clone)]
 pub enum KeyboardMode {
     ModeSteady,
     ModeBreathing,

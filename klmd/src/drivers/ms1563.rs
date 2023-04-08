@@ -18,6 +18,8 @@ use crate::driver::KeyboardMode;
 //use hidapi::HidDevice;
 
 const TAG: &'static str = "MS1563";
+const MS1563_SUPPORTED_MODES: [KeyboardMode; 3] = [KeyboardMode::ModeSteady,
+    KeyboardMode::ModeBreathing, KeyboardMode::ModeColorshift];
 const VENDOR_ID: u16 = 0x1462;
 const PRODUCT_ID: u16 = 0x1563;
 
@@ -152,6 +154,6 @@ impl driver::Driver for MS1563{
     }
 
     fn get_modes(&self) -> Vec<KeyboardMode> {
-        Vec::<KeyboardMode>::new()
+        MS1563_SUPPORTED_MODES.to_vec()
     }
 }
