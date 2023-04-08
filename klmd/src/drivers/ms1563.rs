@@ -12,9 +12,10 @@
 use crate::drivers::driver;
 use crate::util::log;
 use crate::util::color;
+use crate::driver::KeyboardMode;
 
-use hidapi::HidApi;
-use hidapi::HidDevice;
+//use hidapi::HidApi;
+//use hidapi::HidDevice;
 
 const TAG: &'static str = "MS1563";
 const VENDOR_ID: u16 = 0x1462;
@@ -58,7 +59,7 @@ impl driver::Driver for MS1563{
 
     //TODO: implement all methods
 
-    fn is_present(api: &hidapi::HidApi) -> bool {
+    fn is_present(_api: &hidapi::HidApi) -> bool {
         log::e(TAG, "is_present not implemented");
         true
     }
@@ -148,5 +149,9 @@ impl driver::Driver for MS1563{
             log::e(TAG, "Powering on keyboard lightning is not supported for MS1563");
             false
         }
+    }
+
+    fn get_modes(&self) -> Vec<KeyboardMode> {
+        Vec::<KeyboardMode>::new()
     }
 }

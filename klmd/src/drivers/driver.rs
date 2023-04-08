@@ -11,7 +11,23 @@
 
 use crate::util::color;
 
-use hidapi::HidApi;
+//use hidapi::HidApi;
+
+pub enum KeyboardMode {
+    ModeSteady,
+    ModeBreathing,
+    ModeColorshift,
+}
+
+impl KeyboardMode {
+    pub fn to_u8(&self) -> u8 {
+        match *self {
+            KeyboardMode::ModeSteady => 0x0,
+            KeyboardMode::ModeBreathing => 0x1,
+            KeyboardMode::ModeColorshift => 0x2,
+        }
+    }
+}
 
 pub trait Driver {
     fn new(api: &hidapi::HidApi) -> Option<Self> where Self: Sized;
@@ -20,4 +36,5 @@ pub trait Driver {
     fn set_breathing(&self, colors: &Vec<color::RGB>, brightness: u8, speed: u8) -> bool;
     fn set_shift(&self, colors: &Vec<color::RGB>, brightness: u8, speed: u8) -> bool;
     fn set_power(&self, value: bool) -> bool;
+    fn get_modes(&self) -> Vec<KeyboardMode>;
 }

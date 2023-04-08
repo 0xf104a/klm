@@ -14,8 +14,8 @@ extern crate hidapi;
 mod drivers;
 mod util;
 mod keyboard;
-mod proto;
 mod listener;
+mod protocol;
 
 
 use std::os::unix::net::UnixListener;
@@ -27,7 +27,7 @@ use crate::util::log;
 use crate::util::color::RGB;
 
 const TAG: &'static str = "main";
-const VERSION: &'static str = "0.1.2"; //TODO: synchronize with cargo?
+const VERSION: &'static str = "0.1.3"; //TODO: synchronize with cargo?
 
 fn main(){
     log::i(TAG, &format!("klmd version {} starting.", VERSION));

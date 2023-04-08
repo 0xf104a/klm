@@ -14,9 +14,9 @@ class KeyboardMode(Enum):
      Describes possible keyboard modes.
 
      MODE_OFF = 0x0 switches off keyboard lightning
-     MODE_STEADY = 0x1 switches on keyboard lightning in steady mode
-     MODE_BREATHING = 0x2 turns on keyboard lightning in breathing mode
-     MODE_COLORSHIFT = 0x3 turns on keyboard lightning in colorshift mode
+     ModeSteady = 0x1 switches on keyboard lightning in steady mode
+     ModeBreathing = 0x2 turns on keyboard lightning in breathing mode
+     ModeColorshift = 0x3 turns on keyboard lightning in colorshift mode
     """
     MODE_OFF = 0x00
     MODE_STEADY = 0x01

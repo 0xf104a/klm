@@ -26,6 +26,7 @@ pub enum ProtoCmd {
     CMD_SYNC_STATE,
     CMD_POWER,
     CMD_TOGGLE,
+    CMD_REQ_MODES_AVAIL,
 }
 
 #[derive(PartialEq)]
@@ -37,10 +38,11 @@ pub enum ProtoKeyboardMode {
 }
 
 #[derive(PartialEq)]
-pub enum ProtoResponse {
+pub enum ProtoResponseState {
     RESULT_OK,
     RESULT_ERROR,
     RESULT_BAD_REQUEST,
+    RESULT_DATA,
 }
 
 impl ProtoCmd {
@@ -61,8 +63,10 @@ impl ProtoCmd {
             Some(ProtoCmd::CMD_SYNC_STATE)
         } else if cmd == 0x07{
             Some(ProtoCmd::CMD_POWER)
-        } else if cmd == 0x08{
+        } else if cmd == 0x08 {
             Some(ProtoCmd::CMD_TOGGLE)
+        } else if cmd == 0x09 {
+            Some(ProtoCmd::CMD_REQ_MODES_AVAIL)
         } else {
             None
         }
@@ -86,20 +90,21 @@ impl ProtoKeyboardMode {
 
     pub fn to_state(&self) -> keyboard::KeyboardState {
         match *self{
-            ProtoKeyboardMode::MODE_OFF => keyboard::KeyboardState::KEYBOARD_OFF,
-            ProtoKeyboardMode::MODE_STEADY => keyboard::KeyboardState::KEYBOARD_STEADY,
-            ProtoKeyboardMode::MODE_BREATHING => keyboard::KeyboardState::KEYBOARD_BREATHING,
-            ProtoKeyboardMode::MODE_COLOR_SHIFT => keyboard::KeyboardState::KEYBOARD_COLOR_SHIFT,
+            ProtoKeyboardMode::MODE_OFF => keyboard::KeyboardState::KeyboardOff,
+            ProtoKeyboardMode::MODE_STEADY => keyboard::KeyboardState::KeyboardSteady,
+            ProtoKeyboardMode::MODE_BREATHING => keyboard::KeyboardState::KeyboardBreathing,
+            ProtoKeyboardMode::MODE_COLOR_SHIFT => keyboard::KeyboardState::KeyboardColorShift,
         }
     }
 }
 
-impl ProtoResponse {
+impl ProtoResponseState {
     pub fn to_u8(&self) -> u8 {
         match *self {
-            ProtoResponse::RESULT_OK => 0x0,
-            ProtoResponse::RESULT_ERROR => 0x1,
-            ProtoResponse::RESULT_BAD_REQUEST => 0x2,
+            ProtoResponseState::RESULT_OK => 0x0,
+            ProtoResponseState::RESULT_ERROR => 0x1,
+            ProtoResponseState::RESULT_BAD_REQUEST => 0x2,
+            ProtoResponseState::RESULT_DATA => 0x3,
         }
     }
 }
@@ -225,11 +230,11 @@ fn proto_handle_toggle_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>
     buffer_ptr
 }
 
-pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>) -> ProtoResponse{
+pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>) -> ProtoResponseState {
     let mut buffer_ptr = 0;
     if(buffer.len() == 0){
         log::e(TAG, "bad reqeust: empty buffer. This is a bug: must be handled earlier.");
-        return ProtoResponse::RESULT_ERROR;
+        return ProtoResponseState::RESULT_ERROR;
     }
     keyboard.lock_sync();
     //log::d(TAG, &format!("buffer={}", buffer));
@@ -239,7 +244,7 @@ pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>)
         let cmd_wrapped = ProtoCmd::from_u8(cmd_byte);
         if cmd_wrapped == None {
             log::e(TAG, &format!("bad request: unknown command {} at pos {}", cmd_byte, buffer_ptr - 1));
-            return ProtoResponse::RESULT_BAD_REQUEST;
+            return ProtoResponseState::RESULT_BAD_REQUEST;
         }
         let cmd = cmd_wrapped.unwrap();
         log::d(TAG, &format!("cmd={}", cmd_byte));
@@ -264,13 +269,13 @@ pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>)
         }
         if(buffer_ptr == 0) {
             log::e(TAG, "proto_handle_message: parsing message failed.");
-            return ProtoResponse::RESULT_BAD_REQUEST;
+            return ProtoResponseState::RESULT_BAD_REQUEST;
         }
     }
     keyboard.save_state();
     keyboard.unlock_sync();
     keyboard.sync();
-    ProtoResponse::RESULT_OK
+    ProtoResponseState::RESULT_OK
 }
 
 
