@@ -18,13 +18,11 @@ mod listener;
 mod protocol;
 
 
-use std::os::unix::net::UnixListener;
-
 use crate::drivers::driver;
 use crate::drivers::ms1563;
 use crate::drivers::driver::Driver;
 use crate::util::log;
-use crate::util::color::RGB;
+
 
 const TAG: &'static str = "main";
 const VERSION: &'static str = "0.1.3"; //TODO: synchronize with cargo?

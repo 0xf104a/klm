@@ -190,7 +190,7 @@ impl Keyboard {
         } else {
             buffer.push(0x00);
         }
-        if (self.colors.len() > 255) {
+        if self.colors.len() > 255 {
             log::panic(TAG, "Too many colors. Maybe a bug?");
         }
         buffer.push(self.colors.len().try_into().unwrap());
@@ -211,16 +211,16 @@ impl Keyboard {
         let mut state_buffer = [0u8; 1];
         let mut color_buffer = [0u8; 3];
         //Read Brightness
-        file.read_exact(&mut state_buffer);
+        file.read_exact(&mut state_buffer).expect("Can not read brightness state");
         self.brightness = state_buffer[0];
         //Read speed
-        file.read_exact(&mut state_buffer);
+        file.read_exact(&mut state_buffer).expect("Can not read speed state");
         self.speed = state_buffer[0];
         //Read state
-        file.read_exact(&mut state_buffer);
+        file.read_exact(&mut state_buffer).expect("Can not read state");
         self.state = KeyboardState::from_u8(state_buffer[0]).expect("Bad state specifier");
         //Read power
-        file.read_exact(&mut state_buffer);
+        file.read_exact(&mut state_buffer).expect("Can not read power");
         let power_byte = state_buffer[0];
         if power_byte == 0x0 {
             self.power = false;
@@ -228,11 +228,11 @@ impl Keyboard {
             self.power = true;
         }
         //Read number of colors
-        file.read_exact(&mut state_buffer);
+        file.read_exact(&mut state_buffer).expect("Can not read color vector");
         let n = state_buffer[0];
         self.colors = Vec::<color::RGB>::new();
         for _ in 0..n {
-            file.read_exact(&mut color_buffer);
+            file.read_exact(&mut color_buffer).expect("Can no read from color buffer");
             self.colors.push(color::RGB::new(color_buffer[0], color_buffer[1], color_buffer[2]));
         }
         true

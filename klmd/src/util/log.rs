@@ -9,7 +9,7 @@
  * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
  */
 
-static loglvl: u8 = 0b01111000;
+static LOGLVL: u8 = 0b01111000;
 
 pub enum LogLevel {
     DEBUG,
@@ -42,7 +42,7 @@ impl LogLevel {
 }
 
 fn is_present(level: &LogLevel) -> bool{
-    if loglvl & level.to_u8() != 0 {
+    if LOGLVL & level.to_u8() != 0 {
         true
     } else {
         false

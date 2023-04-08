@@ -43,7 +43,7 @@ pub fn listen(keyboard: &mut keyboard::Keyboard){
 
                 let sz = size_buffer[0];
                 log::d(TAG, &format!("Expecting request size to be {} bytes", sz));
-                if(sz > 0){
+                if sz > 0 {
                     let mut buffer = Vec::<u8>::with_capacity(sz as usize);
                     for _ in 0..sz {
                         sock.read_exact(&mut data_buffer).unwrap();
@@ -54,7 +54,7 @@ pub fn listen(keyboard: &mut keyboard::Keyboard){
                     sock.write_all(&response).unwrap();
                 } else {
                     log::e(TAG, "Request length is zero. Responding with bad request.");
-                    response[0] = protocol::proto::ProtoResponseState::RESULT_BAD_REQUEST.to_u8();
+                    response[0] = protocol::proto::ProtoResponseState::ResultBadRequest.to_u8();
                     sock.write_all(&response).unwrap();
                 }
             },
