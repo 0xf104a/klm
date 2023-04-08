@@ -1,10 +1,6 @@
 name: klmd
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+on: [push]
 
 env:
   CARGO_TERM_COLOR: always
@@ -21,3 +17,8 @@ jobs:
     - name: Build
       working-directory: klmd/
       run: cargo build --verbose
+    - name: Upload debug build to GitHub
+      uses: actions/upload-artifact@v3
+      with:
+        name: klmd
+        path: klmd/target/debug/klmd
