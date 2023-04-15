@@ -17,6 +17,8 @@ use crate::keyboard;
 use std::os::unix::net::UnixListener;
 use std::os::unix::fs::PermissionsExt;
 use std::io::prelude::*;
+use crate::util::u8::U8Serializable;
+use crate::util::u8::U8VecSerializable;
 
 const TAG: &'static str = "listener";
 
@@ -50,11 +52,11 @@ pub fn listen(keyboard: &mut keyboard::Keyboard){
                         buffer.push(data_buffer[0]);
                     }
                     let result = protocol::proto::proto_handle_message(keyboard, &buffer);
-                    response[0] = result.to_u8();
-                    sock.write_all(&response).unwrap();
+                    let result_vec = result.to_u8_vec();
+                    sock.write_all(&result_vec).unwrap();
                 } else {
                     log::e(TAG, "Request length is zero. Responding with bad request.");
-                    response[0] = protocol::proto::ProtoResponseState::ResultBadRequest.to_u8();
+                    response[0] = protocol::response::ProtoResponseState::ResultBadRequest.to_u8();
                     sock.write_all(&response).unwrap();
                 }
             },

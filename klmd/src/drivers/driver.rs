@@ -10,6 +10,7 @@
  */
 
 use crate::util::color;
+use crate::util::u8::U8Serializable;
 
 //use hidapi::HidApi;
 
@@ -20,12 +21,12 @@ pub enum KeyboardMode {
     ModeColorshift,
 }
 
-impl KeyboardMode {
-    pub fn to_u8(&self) -> u8 {
+impl U8Serializable for KeyboardMode {
+    fn to_u8(&self) -> u8 {
         match *self {
-            KeyboardMode::ModeSteady => 0x0,
-            KeyboardMode::ModeBreathing => 0x1,
-            KeyboardMode::ModeColorshift => 0x2,
+            KeyboardMode::ModeSteady => 0x1,
+            KeyboardMode::ModeBreathing => 0x2,
+            KeyboardMode::ModeColorshift => 0x3,
         }
     }
 }

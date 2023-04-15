@@ -12,6 +12,7 @@
 use crate::util::log;
 use crate::util::color;
 use crate::keyboard;
+use crate::protocol::response::{ProtoResponse, ProtoResponseState};
 
 const TAG: &'static str = "proto";
 
@@ -35,14 +36,6 @@ pub enum ProtoKeyboardMode {
     ModeSteady,
     ModeBreathing,
     ModeColorShift,
-}
-
-#[derive(PartialEq)]
-pub enum ProtoResponseState {
-    ResultOk,
-    ResultError,
-    ResultBadRequest,
-    ResultData,
 }
 
 impl ProtoCmd {
@@ -94,17 +87,6 @@ impl ProtoKeyboardMode {
             ProtoKeyboardMode::ModeSteady => keyboard::KeyboardState::KeyboardSteady,
             ProtoKeyboardMode::ModeBreathing => keyboard::KeyboardState::KeyboardBreathing,
             ProtoKeyboardMode::ModeColorShift => keyboard::KeyboardState::KeyboardColorShift,
-        }
-    }
-}
-
-impl ProtoResponseState {
-    pub fn to_u8(&self) -> u8 {
-        match *self {
-            ProtoResponseState::ResultOk => 0x0,
-            ProtoResponseState::ResultError => 0x1,
-            ProtoResponseState::ResultBadRequest => 0x2,
-            ProtoResponseState::ResultData => 0x3,
         }
     }
 }
@@ -239,11 +221,12 @@ fn proto_handle_request_modes(keyboard: &keyboard::Keyboard, buffer: &Vec<u8>, b
     buffer_ptr
 }
 
-pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>) -> ProtoResponseState {
+pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>) -> ProtoResponse {
+    let mut proto_response = ProtoResponse::from_state(ProtoResponseState::ResultError);
     let mut buffer_ptr = 0;
     if buffer.len() == 0 {
         log::e(TAG, "bad reqeust: empty buffer. This is a bug: must be handled earlier.");
-        return ProtoResponseState::ResultError;
+        return ProtoResponse::from_state(ProtoResponseState::ResultError);
     }
     keyboard.lock_sync();
     //log::d(TAG, &format!("buffer={}", buffer));
@@ -253,7 +236,7 @@ pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>)
         let cmd_wrapped = ProtoCmd::from_u8(cmd_byte);
         if cmd_wrapped == None {
             log::e(TAG, &format!("bad request: unknown command {} at pos {}", cmd_byte, buffer_ptr - 1));
-            return ProtoResponseState::ResultBadRequest;
+            return ProtoResponse::from_state(ProtoResponseState::ResultBadRequest);
         }
         let cmd = cmd_wrapped.unwrap();
         log::d(TAG, &format!("cmd={}", cmd_byte));
@@ -280,13 +263,13 @@ pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>)
         }
         if buffer_ptr == 0 {
             log::e(TAG, "proto_handle_message: parsing message failed.");
-            return ProtoResponseState::ResultBadRequest;
+            return ProtoResponse::from_state(ProtoResponseState::ResultBadRequest);
         }
     }
     keyboard.save_state();
     keyboard.unlock_sync();
     keyboard.sync();
-    ProtoResponseState::ResultOk
+    proto_response
 }
 
 

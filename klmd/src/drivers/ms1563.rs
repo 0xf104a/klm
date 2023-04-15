@@ -59,8 +59,6 @@ impl driver::Driver for MS1563{
         }
     }
 
-    //TODO: implement all methods
-
     fn is_present(_api: &hidapi::HidApi) -> bool {
         log::e(TAG, "is_present not implemented");
         true
