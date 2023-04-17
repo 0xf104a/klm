@@ -1,3 +1,5 @@
+use crate::util::u8::U8VecSerializable;
+
 /**
  * This file is part of KLMd project.
  *
@@ -25,5 +27,11 @@ impl RGB{
     }
     pub fn to_s(&self) -> String{
         format!("<RGB: {}, {}, {}>", self.r, self.g, self.b)
+    }
+}
+
+impl U8VecSerializable for RGB {
+    fn to_u8_vec(&self) -> Vec<u8> {
+        vec![self.r, self.g, self.b]
     }
 }

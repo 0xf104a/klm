@@ -10,13 +10,15 @@
  */
 
 
-use crate::proto;
+use crate::protocol;
 use crate::util::log;
 use crate::keyboard;
 
 use std::os::unix::net::UnixListener;
 use std::os::unix::fs::PermissionsExt;
 use std::io::prelude::*;
+use crate::util::u8::U8Serializable;
+use crate::util::u8::U8VecSerializable;
 
 const TAG: &'static str = "listener";
 
@@ -28,7 +30,7 @@ const TAG: &'static str = "listener";
 pub fn listen(keyboard: &mut keyboard::Keyboard){
     let listener = UnixListener::bind("/var/run/klmd.sock").unwrap();
 
-    std::fs::set_permissions("/var/run/klmd.sock", std::fs::Permissions::from_mode(0o666)).unwrap();
+    std::fs::set_permissions("/var/run/klmd.sock", std::fs::Permissions::from_mode(0o660)).unwrap();
 
     log::i(TAG, "Started listening at /var/run/klmd.sock");
 
@@ -39,23 +41,23 @@ pub fn listen(keyboard: &mut keyboard::Keyboard){
                 let mut size_buffer = [0; 1];
                 let mut response = [0; 1];
                 let mut data_buffer = [0; 1];
-                sock.read_exact(&mut size_buffer);
+                sock.read_exact(&mut size_buffer).unwrap();
 
                 let sz = size_buffer[0];
                 log::d(TAG, &format!("Expecting request size to be {} bytes", sz));
-                if(sz > 0){
+                if sz > 0 {
                     let mut buffer = Vec::<u8>::with_capacity(sz as usize);
                     for _ in 0..sz {
-                        sock.read_exact(&mut data_buffer);
+                        sock.read_exact(&mut data_buffer).unwrap();
                         buffer.push(data_buffer[0]);
                     }
-                    let result = proto::proto_handle_message(keyboard, &buffer);
-                    response[0] = result.to_u8();
-                    sock.write_all(&response);
+                    let result = protocol::proto::proto_handle_message(keyboard, &buffer);
+                    let result_vec = result.to_u8_vec();
+                    sock.write_all(&result_vec).unwrap();
                 } else {
                     log::e(TAG, "Request length is zero. Responding with bad request.");
-                    response[0] = proto::ProtoResponse::RESULT_BAD_REQUEST.to_u8();
-                    sock.write_all(&response);
+                    response[0] = protocol::response::ProtoResponseState::ResultBadRequest.to_u8();
+                    sock.write_all(&response).unwrap();
                 }
             },
             Err(e) => log::e(TAG, &format!("accept: {:?}", e)),

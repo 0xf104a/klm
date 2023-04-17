@@ -1,6 +1,6 @@
 # This file is part of KLMd project.
 #
-#  Copyright 2022 by Polar <toddot@protonmail.com>
+#  Copyright 2022-2023 by Polar <toddot@protonmail.com>
 #
 #  Licensed under GNU General Public License 3.0 or later.
 #  Some rights reserved. See COPYING, AUTHORS.
@@ -35,5 +35,5 @@ target_install(){
     exec cp config/klmd.service /usr/lib/systemd/system/klmd.service
     exec cp target/$RELEASE_TYPE/klmd /usr/bin/klmd
     exec mkdir -p /var/cache/klm
-    success "Succesfully install klmd"
+    success "Succesfully installed klmd"
 }

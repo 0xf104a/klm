@@ -12,57 +12,54 @@
 use crate::util::log;
 use crate::util::color;
 use crate::keyboard;
+use crate::protocol::response::{ProtoResponse, ProtoResponseState};
 
 const TAG: &'static str = "proto";
 
 #[derive(PartialEq)]
 pub enum ProtoCmd {
-    CMD_COLORS,
-    CMD_SET_COLOR,
-    CMD_ADD_COLOR,
-    CMD_BRIGHTNESS,
-    CMD_SPEED,
-    CMD_MODE,
-    CMD_SYNC_STATE,
-    CMD_POWER,
-    CMD_TOGGLE,
+    CmdColors,
+    CmdSetColor,
+    CmdAddColor,
+    CmdBrightness,
+    CmdSpeed,
+    CmdMode,
+    CmdSyncState,
+    CmdPower,
+    CmdToggle,
+    CmdReqModesAvail,
 }
 
 #[derive(PartialEq)]
 pub enum ProtoKeyboardMode {
-    MODE_OFF,
-    MODE_STEADY,
-    MODE_BREATHING,
-    MODE_COLOR_SHIFT,
-}
-
-#[derive(PartialEq)]
-pub enum ProtoResponse {
-    RESULT_OK,
-    RESULT_ERROR,
-    RESULT_BAD_REQUEST,
+    ModeOff,
+    ModeSteady,
+    ModeBreathing,
+    ModeColorShift,
 }
 
 impl ProtoCmd {
-    pub fn from_u8(cmd: u8) -> Option<ProtoCmd>{
+    pub fn from_u8(cmd: u8) -> Option<ProtoCmd> {
         if cmd == 0x0 {
-            Some(ProtoCmd::CMD_COLORS)
+            Some(ProtoCmd::CmdColors)
         } else if cmd == 0x01 {
-            Some(ProtoCmd::CMD_SET_COLOR)
+            Some(ProtoCmd::CmdSetColor)
         } else if cmd == 0x02 {
-            Some(ProtoCmd::CMD_ADD_COLOR)
+            Some(ProtoCmd::CmdAddColor)
         } else if cmd == 0x03 {
-            Some(ProtoCmd::CMD_BRIGHTNESS)
+            Some(ProtoCmd::CmdBrightness)
         } else if cmd == 0x04 {
-            Some(ProtoCmd::CMD_SPEED)
+            Some(ProtoCmd::CmdSpeed)
         } else if cmd == 0x05 {
-            Some(ProtoCmd::CMD_MODE)
+            Some(ProtoCmd::CmdMode)
         } else if cmd == 0x06 {
-            Some(ProtoCmd::CMD_SYNC_STATE)
-        } else if cmd == 0x07{
-            Some(ProtoCmd::CMD_POWER)
-        } else if cmd == 0x08{
-            Some(ProtoCmd::CMD_TOGGLE)
+            Some(ProtoCmd::CmdSyncState)
+        } else if cmd == 0x07 {
+            Some(ProtoCmd::CmdPower)
+        } else if cmd == 0x08 {
+            Some(ProtoCmd::CmdToggle)
+        } else if cmd == 0x09 {
+            Some(ProtoCmd::CmdReqModesAvail)
         } else {
             None
         }
@@ -72,47 +69,37 @@ impl ProtoCmd {
 impl ProtoKeyboardMode {
     pub fn from_u8(byte: u8) -> Option<ProtoKeyboardMode> {
         if byte == 0x0 {
-            Some(ProtoKeyboardMode::MODE_OFF)
-        }else if byte == 0x01 {
-            Some(ProtoKeyboardMode::MODE_STEADY)
-        }else if byte == 0x02 {
-            Some(ProtoKeyboardMode::MODE_BREATHING)
-        }else if byte == 0x03 {
-            Some(ProtoKeyboardMode::MODE_COLOR_SHIFT)
-        }else{
+            Some(ProtoKeyboardMode::ModeOff)
+        } else if byte == 0x01 {
+            Some(ProtoKeyboardMode::ModeSteady)
+        } else if byte == 0x02 {
+            Some(ProtoKeyboardMode::ModeBreathing)
+        } else if byte == 0x03 {
+            Some(ProtoKeyboardMode::ModeColorShift)
+        } else {
             None
         }
     }
 
     pub fn to_state(&self) -> keyboard::KeyboardState {
-        match *self{
-            ProtoKeyboardMode::MODE_OFF => keyboard::KeyboardState::KEYBOARD_OFF,
-            ProtoKeyboardMode::MODE_STEADY => keyboard::KeyboardState::KEYBOARD_STEADY,
-            ProtoKeyboardMode::MODE_BREATHING => keyboard::KeyboardState::KEYBOARD_BREATHING,
-            ProtoKeyboardMode::MODE_COLOR_SHIFT => keyboard::KeyboardState::KEYBOARD_COLOR_SHIFT,
-        }
-    }
-}
-
-impl ProtoResponse {
-    pub fn to_u8(&self) -> u8 {
         match *self {
-            ProtoResponse::RESULT_OK => 0x0,
-            ProtoResponse::RESULT_ERROR => 0x1,
-            ProtoResponse::RESULT_BAD_REQUEST => 0x2,
+            ProtoKeyboardMode::ModeOff => keyboard::KeyboardState::KeyboardOff,
+            ProtoKeyboardMode::ModeSteady => keyboard::KeyboardState::KeyboardSteady,
+            ProtoKeyboardMode::ModeBreathing => keyboard::KeyboardState::KeyboardBreathing,
+            ProtoKeyboardMode::ModeColorShift => keyboard::KeyboardState::KeyboardColorShift,
         }
     }
 }
 
-fn proto_handle_colors(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize{
+fn proto_handle_colors(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize {
     let n_colors = buffer[buffer_ptr];
     buffer_ptr += 1;
-    if n_colors == 0{
+    if n_colors == 0 {
         log::w(TAG, "ambgious request: set color array to size of 0 colors");
         return 0;
     }
     keyboard.reset_colors();
-    for color_num in 1..n_colors {
+    for _color_num in 1..n_colors {
         if buffer_ptr + 2 >= buffer.len() {
             log::e(TAG, "bad request: expected color specification, got end of message");
             return 0;
@@ -126,8 +113,8 @@ fn proto_handle_colors(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut 
     buffer_ptr - 2
 }
 
-fn proto_handle_set_color(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize {
-    if buffer_ptr + 2 >= buffer.len(){
+fn proto_handle_set_color(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, buffer_ptr: usize) -> usize {
+    if buffer_ptr + 2 >= buffer.len() {
         log::e(TAG, "bad request: expected color specification, got end of message");
         return 0;
     }
@@ -138,8 +125,8 @@ fn proto_handle_set_color(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, m
     buffer_ptr + 3
 }
 
-fn proto_handle_add_color(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize {
-    if buffer_ptr + 2 >= buffer.len(){
+fn proto_handle_add_color(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, buffer_ptr: usize) -> usize {
+    if buffer_ptr + 2 >= buffer.len() {
         log::e(TAG, "bad request: expected color specification, got end of message");
         return 0;
     }
@@ -150,7 +137,7 @@ fn proto_handle_add_color(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, m
     buffer_ptr + 3
 }
 
-fn proto_handle_set_brightness(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr:  usize) -> usize {
+fn proto_handle_set_brightness(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, buffer_ptr: usize) -> usize {
     if buffer_ptr >= buffer.len() {
         log::e(TAG, "bad request: expected brightness specification, got end of message");
         return 0;
@@ -160,7 +147,7 @@ fn proto_handle_set_brightness(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u
     buffer_ptr + 1
 }
 
-fn proto_handle_set_speed(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize {
+fn proto_handle_set_speed(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, buffer_ptr: usize) -> usize {
     if buffer_ptr >= buffer.len() {
         log::e(TAG, "bad request: expected brightness specification, got end of message");
         return 0;
@@ -170,7 +157,7 @@ fn proto_handle_set_speed(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, m
     buffer_ptr + 1
 }
 
-fn proto_handle_set_mode(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize {
+fn proto_handle_set_mode(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, buffer_ptr: usize) -> usize {
     if buffer_ptr >= buffer.len() {
         log::e(TAG, "bad request: expected mode specification, got end of message");
         return 0;
@@ -186,7 +173,7 @@ fn proto_handle_set_mode(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mu
     buffer_ptr + 1
 }
 
-fn proto_handle_set_lock(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize {
+fn proto_handle_set_lock(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, buffer_ptr: usize) -> usize {
     if buffer_ptr >= buffer.len() {
         log::e(TAG, "bad request: expected lock specification, got end of message");
         return 0;
@@ -201,23 +188,23 @@ fn proto_handle_set_lock(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mu
 }
 
 
-
-fn proto_handle_set_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize {
+fn proto_handle_set_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, buffer_ptr: usize) -> usize {
     if buffer_ptr >= buffer.len() {
         log::e(TAG, "bad request: expected power specification, got end of message");
     }
     let b = buffer[buffer_ptr];
     if b == 0 {
-       keyboard.set_power(false);
+        keyboard.set_power(false);
     } else {
-       keyboard.set_power(true);
+        keyboard.set_power(true);
     }
     buffer_ptr + 1
 }
 
 
-fn proto_handle_toggle_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize {
-    if buffer_ptr >= buffer.len() {
+fn proto_handle_toggle_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>,
+                             buffer_ptr: usize) -> usize {
+    if buffer_ptr > buffer.len() {
         log::e(TAG, "bad request: buffer_ptr is out of range");
         return 0;
     }
@@ -225,52 +212,71 @@ fn proto_handle_toggle_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>
     buffer_ptr
 }
 
-pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>) -> ProtoResponse{
+fn proto_handle_request_modes(keyboard: &keyboard::Keyboard, buffer: &Vec<u8>,
+                              buffer_ptr: usize, response: &mut ProtoResponse) -> usize {
+    if buffer_ptr > buffer.len() {
+        log::e(TAG, "bad request: buffer_ptr is out of range");
+        return 0;
+    }
+    let modes = keyboard.get_color_modes();
+    response.add_response(Box::new(modes));
+    buffer_ptr
+}
+
+pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>) -> ProtoResponse {
+    let mut proto_response = ProtoResponse::from_state(ProtoResponseState::ResultError);
     let mut buffer_ptr = 0;
-    if(buffer.len() == 0){
+    if buffer.len() == 0 {
         log::e(TAG, "bad reqeust: empty buffer. This is a bug: must be handled earlier.");
-        return ProtoResponse::RESULT_ERROR;
+        return ProtoResponse::from_state(ProtoResponseState::ResultError);
     }
     keyboard.lock_sync();
-    //log::d(TAG, &format!("buffer={}", buffer));
+    //log::d(TAG, &format!("Received buffer size of {"));
     while buffer_ptr < buffer.len() {
         let cmd_byte = buffer[buffer_ptr];
         buffer_ptr += 1;
         let cmd_wrapped = ProtoCmd::from_u8(cmd_byte);
         if cmd_wrapped == None {
             log::e(TAG, &format!("bad request: unknown command {} at pos {}", cmd_byte, buffer_ptr - 1));
-            return ProtoResponse::RESULT_BAD_REQUEST;
+            return ProtoResponse::from_state(ProtoResponseState::ResultBadRequest);
         }
         let cmd = cmd_wrapped.unwrap();
         log::d(TAG, &format!("cmd={}", cmd_byte));
-        if cmd == ProtoCmd::CMD_COLORS {
+        if cmd == ProtoCmd::CmdColors {
             buffer_ptr = proto_handle_colors(keyboard, buffer, buffer_ptr);
-        } else if cmd == ProtoCmd::CMD_SET_COLOR {
+        } else if cmd == ProtoCmd::CmdSetColor {
             buffer_ptr = proto_handle_set_color(keyboard, buffer, buffer_ptr);
-        } else if cmd == ProtoCmd::CMD_ADD_COLOR {
+        } else if cmd == ProtoCmd::CmdAddColor {
             buffer_ptr = proto_handle_add_color(keyboard, buffer, buffer_ptr);
-        } else if cmd == ProtoCmd::CMD_BRIGHTNESS {
+        } else if cmd == ProtoCmd::CmdBrightness {
             buffer_ptr = proto_handle_set_brightness(keyboard, buffer, buffer_ptr);
-        } else if cmd == ProtoCmd::CMD_SPEED {
+        } else if cmd == ProtoCmd::CmdSpeed {
             buffer_ptr = proto_handle_set_speed(keyboard, buffer, buffer_ptr);
-        } else if cmd == ProtoCmd::CMD_MODE {
+        } else if cmd == ProtoCmd::CmdMode {
             buffer_ptr = proto_handle_set_mode(keyboard, buffer, buffer_ptr);
-        } else if cmd == ProtoCmd::CMD_SYNC_STATE {
+        } else if cmd == ProtoCmd::CmdSyncState {
             buffer_ptr = proto_handle_set_lock(keyboard, buffer, buffer_ptr);
-        } else if cmd == ProtoCmd::CMD_POWER {
+        } else if cmd == ProtoCmd::CmdPower {
             buffer_ptr = proto_handle_set_power(keyboard, buffer, buffer_ptr);
-        } else if cmd == ProtoCmd::CMD_TOGGLE {
+        } else if cmd == ProtoCmd::CmdToggle {
             buffer_ptr = proto_handle_toggle_power(keyboard, buffer, buffer_ptr);
+        } else if cmd == ProtoCmd::CmdReqModesAvail {
+            buffer_ptr = proto_handle_request_modes(keyboard, buffer, buffer_ptr,
+                                                    &mut proto_response);
         }
-        if(buffer_ptr == 0) {
+        if buffer_ptr == 0 {
             log::e(TAG, "proto_handle_message: parsing message failed.");
-            return ProtoResponse::RESULT_BAD_REQUEST;
+            return ProtoResponse::from_state(ProtoResponseState::ResultBadRequest);
         }
+    }
+    if proto_response.state != ProtoResponseState::ResultData {
+        log::d(TAG, "Response state not data, setting to state ok");
+        proto_response = ProtoResponse::from_state(ProtoResponseState::ResultOk);
     }
     keyboard.save_state();
     keyboard.unlock_sync();
     keyboard.sync();
-    ProtoResponse::RESULT_OK
+    proto_response
 }
 
 

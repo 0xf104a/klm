@@ -1,11 +1,11 @@
- # This file is part of pyklm project.
- #
- #  Copyright 2022 by Polar <toddot@protonmail.com>
- #
- #  Licensed under GNU General Public License 3.0 or later.
- #  Some rights reserved. See COPYING, AUTHORS.
- #
- # @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
+# This file is part of pyklm project.
+#
+#  Copyright 2022-2023 by Polar <toddot@protonmail.com>
+#
+#  Licensed under GNU General Public License 3.0 or later.
+#  Some rights reserved. See COPYING, AUTHORS.
+#
+# @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
 
 import socket
 import os
@@ -15,25 +15,61 @@ from pyklm.rgb import RGB
 from pyklm.util import byteargs
 from pyklm.mode import KeyboardMode
 
+
 class KLMError(Exception):
     pass
 
-class KLMResult(Enum):
+
+class KLMResultStatus(Enum):
     RESULT_OK = 0x0
     RESULT_ERROR = 0x1
     RESULT_BAD_REQUEST = 0x2
+    RESULT_DATA = 0x3
 
-    @byteargs
     @staticmethod
+    @byteargs
     def from_byte(byte: int):
         if byte == 0x0:
-            return KLMResult.RESULT_OK
+            return KLMResultStatus.RESULT_OK
         elif byte == 0x1:
-            return KLMResult.RESULT_ERROR
+            return KLMResultStatus.RESULT_ERROR
         elif byte == 0x2:
-            return KLMResult.RESULT_BAD_REQUEST
+            return KLMResultStatus.RESULT_BAD_REQUEST
+        elif byte == 0x3:
+            return KLMResultStatus.RESULT_DATA
         else:
             raise ValueError(f"Bad status code: {byte}")
+
+
+class KLMResult:
+    """
+     Stores result and associated data if needed
+    """
+
+    def __init__(self):
+        self.status = KLMResultStatus.RESULT_ERROR
+        self.data = list()
+
+    def __repr__(self):
+        return f"<KLMResult: {self.status}, {len(self.data)} bytes of data>"
+
+    @classmethod
+    def receive_from(cls, sock):
+        status_byte = sock.recv(1)[0]
+        status = KLMResultStatus.from_byte(status_byte)
+        if status != KLMResultStatus.RESULT_DATA:
+            result = cls()
+            result.status = status
+            return result
+        size_byte = sock.recv(1)[0]
+        if size_byte == 0:
+            raise ValueError(f"Unexpected response size: {size_byte}")
+        data = sock.recv(size_byte)
+        result = cls()
+        result.status = KLMResultStatus.RESULT_DATA
+        result.data = data
+        return result
+
 
 class KLMConnection:
     """
@@ -104,6 +140,10 @@ class KLMConnection:
             self.staged += bytearray([0x00])
         self.size += 2
 
+    def get_modes(self):
+        self.staged += bytearray([0x09])
+        self.size += 1
+
     def toggle(self):
         """
          Toggles power of keyboard.
@@ -127,7 +167,7 @@ class KLMConnection:
         sock.connect("/var/run/klmd.sock")
         sock.send(bytearray([self.size]))
         sock.send(self.staged)
-        result = KLMResult.from_byte(sock.recv(1)[0])
+        result = KLMResult.receive_from(sock)
         sock.close()
         return result
 
