@@ -39,4 +39,5 @@ pub trait Driver {
     fn set_shift(&self, colors: &Vec<color::RGB>, brightness: u8, speed: u8) -> bool;
     fn set_power(&self, value: bool) -> bool;
     fn get_modes(&self) -> Vec<KeyboardMode>;
+    fn get_max_colors(&self) -> u8;
 }

@@ -9,7 +9,7 @@
  * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
  */
 
-static LOGLVL: u8 = 0b01111000;
+static LOGLVL: u8 = 0b11111000;
 
 pub enum LogLevel {
     DEBUG,

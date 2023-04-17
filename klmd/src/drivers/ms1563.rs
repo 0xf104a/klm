@@ -23,7 +23,7 @@ const MS1563_SUPPORTED_MODES: [KeyboardMode; 3] = [KeyboardMode::ModeSteady,
 const VENDOR_ID: u16 = 0x1462;
 const PRODUCT_ID: u16 = 0x1563;
 
-pub struct MS1563{
+pub struct MS1563 {
     device: hidapi::HidDevice,
 }
 
@@ -34,26 +34,26 @@ impl MS1563 {
         buffer
     }
 
-    fn write_buffer(&self, buffer: &[u8; 64]) -> bool{
-        if let Ok(_) = self.device.send_feature_report(buffer){
+    fn write_buffer(&self, buffer: &[u8; 64]) -> bool {
+        if let Ok(_) = self.device.send_feature_report(buffer) {
             log::d(TAG, "Succesfully written buffer.");
             true
-        }else{
+        } else {
             log::e(TAG, "Failed writing buffer.");
             false
         }
     }
 }
 
-impl driver::Driver for MS1563{
+impl driver::Driver for MS1563 {
     fn new(api: &hidapi::HidApi) -> Option<MS1563> {
         log::i(TAG, "Opening MS1563 device");
-        if let Ok(_device) = api.open(VENDOR_ID, PRODUCT_ID){
+        if let Ok(_device) = api.open(VENDOR_ID, PRODUCT_ID) {
             Some(MS1563 {
                 device: _device,
             })
         } else {
-            log::e(TAG,"Opening device failed. Check that program has right access rights.");
+            log::e(TAG, "Opening device failed. Check that program has right access rights.");
             log::panic(TAG, "Unable to open MS1563 device!");
             None
         }
@@ -64,7 +64,7 @@ impl driver::Driver for MS1563{
         true
     }
 
-    fn set_color(&self, color: &color::RGB, _brightness: u8) -> bool{
+    fn set_color(&self, color: &color::RGB, _brightness: u8) -> bool {
         let mut brightness = _brightness;
         if brightness > 10 {
             log::w(TAG, &format!("Requested brightnesss is too big: {}", brightness));
@@ -80,7 +80,7 @@ impl driver::Driver for MS1563{
         self.write_buffer(&buffer)
     }
 
-    fn set_breathing(&self, colors: &Vec<color::RGB>, _brightness: u8, _speed: u8) -> bool{
+    fn set_breathing(&self, colors: &Vec<color::RGB>, _brightness: u8, _speed: u8) -> bool {
         if colors.len() > 7 {
             log::w(TAG, "Color vector is too large, ignoring request");
             return false;
@@ -91,7 +91,7 @@ impl driver::Driver for MS1563{
             brightness = 10;
         }
         let mut speed = _speed;
-        if speed > 2{
+        if speed > 2 {
             log::w(TAG, &format!("Requested speed is too big: {}", speed));
             speed = 2;
         }
@@ -110,7 +110,7 @@ impl driver::Driver for MS1563{
         self.write_buffer(&buffer)
     }
 
-    fn set_shift(&self, colors: &Vec<color::RGB>, _brightness: u8, _speed: u8) -> bool{
+    fn set_shift(&self, colors: &Vec<color::RGB>, _brightness: u8, _speed: u8) -> bool {
         if colors.len() > 7 {
             log::w(TAG, "Color vector is too large, ignoring request");
             return false;
@@ -121,7 +121,7 @@ impl driver::Driver for MS1563{
             brightness = 10;
         }
         let mut speed = _speed;
-        if speed > 2{
+        if speed > 2 {
             log::w(TAG, &format!("Requested speed is too big: {}", speed));
             speed = 2;
         }
@@ -140,12 +140,12 @@ impl driver::Driver for MS1563{
         self.write_buffer(&buffer)
     }
 
-    fn set_power(&self, value: bool) -> bool{
+    fn set_power(&self, value: bool) -> bool {
         if !value {
             log::d(TAG, "Powering off keyboard lightning");
             self.write_buffer(&MS1563::get_buffer());
             true
-        }else{
+        } else {
             log::e(TAG, "Powering on keyboard lightning is not supported for MS1563");
             false
         }
@@ -153,5 +153,8 @@ impl driver::Driver for MS1563{
 
     fn get_modes(&self) -> Vec<KeyboardMode> {
         MS1563_SUPPORTED_MODES.to_vec()
+    }
+    fn get_max_colors(&self) -> u8 {
+        8
     }
 }

@@ -39,7 +39,7 @@ pub enum ProtoKeyboardMode {
 }
 
 impl ProtoCmd {
-    pub fn from_u8(cmd: u8) -> Option<ProtoCmd>{
+    pub fn from_u8(cmd: u8) -> Option<ProtoCmd> {
         if cmd == 0x0 {
             Some(ProtoCmd::CmdColors)
         } else if cmd == 0x01 {
@@ -54,7 +54,7 @@ impl ProtoCmd {
             Some(ProtoCmd::CmdMode)
         } else if cmd == 0x06 {
             Some(ProtoCmd::CmdSyncState)
-        } else if cmd == 0x07{
+        } else if cmd == 0x07 {
             Some(ProtoCmd::CmdPower)
         } else if cmd == 0x08 {
             Some(ProtoCmd::CmdToggle)
@@ -70,19 +70,19 @@ impl ProtoKeyboardMode {
     pub fn from_u8(byte: u8) -> Option<ProtoKeyboardMode> {
         if byte == 0x0 {
             Some(ProtoKeyboardMode::ModeOff)
-        }else if byte == 0x01 {
+        } else if byte == 0x01 {
             Some(ProtoKeyboardMode::ModeSteady)
-        }else if byte == 0x02 {
+        } else if byte == 0x02 {
             Some(ProtoKeyboardMode::ModeBreathing)
-        }else if byte == 0x03 {
+        } else if byte == 0x03 {
             Some(ProtoKeyboardMode::ModeColorShift)
-        }else{
+        } else {
             None
         }
     }
 
     pub fn to_state(&self) -> keyboard::KeyboardState {
-        match *self{
+        match *self {
             ProtoKeyboardMode::ModeOff => keyboard::KeyboardState::KeyboardOff,
             ProtoKeyboardMode::ModeSteady => keyboard::KeyboardState::KeyboardSteady,
             ProtoKeyboardMode::ModeBreathing => keyboard::KeyboardState::KeyboardBreathing,
@@ -91,10 +91,10 @@ impl ProtoKeyboardMode {
     }
 }
 
-fn proto_handle_colors(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize{
+fn proto_handle_colors(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut buffer_ptr: usize) -> usize {
     let n_colors = buffer[buffer_ptr];
     buffer_ptr += 1;
-    if n_colors == 0{
+    if n_colors == 0 {
         log::w(TAG, "ambgious request: set color array to size of 0 colors");
         return 0;
     }
@@ -114,7 +114,7 @@ fn proto_handle_colors(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, mut 
 }
 
 fn proto_handle_set_color(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, buffer_ptr: usize) -> usize {
-    if buffer_ptr + 2 >= buffer.len(){
+    if buffer_ptr + 2 >= buffer.len() {
         log::e(TAG, "bad request: expected color specification, got end of message");
         return 0;
     }
@@ -126,7 +126,7 @@ fn proto_handle_set_color(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, b
 }
 
 fn proto_handle_add_color(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, buffer_ptr: usize) -> usize {
-    if buffer_ptr + 2 >= buffer.len(){
+    if buffer_ptr + 2 >= buffer.len() {
         log::e(TAG, "bad request: expected color specification, got end of message");
         return 0;
     }
@@ -137,7 +137,7 @@ fn proto_handle_add_color(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, b
     buffer_ptr + 3
 }
 
-fn proto_handle_set_brightness(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, buffer_ptr:  usize) -> usize {
+fn proto_handle_set_brightness(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, buffer_ptr: usize) -> usize {
     if buffer_ptr >= buffer.len() {
         log::e(TAG, "bad request: expected brightness specification, got end of message");
         return 0;
@@ -188,23 +188,23 @@ fn proto_handle_set_lock(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, bu
 }
 
 
-
 fn proto_handle_set_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, buffer_ptr: usize) -> usize {
     if buffer_ptr >= buffer.len() {
         log::e(TAG, "bad request: expected power specification, got end of message");
     }
     let b = buffer[buffer_ptr];
     if b == 0 {
-       keyboard.set_power(false);
+        keyboard.set_power(false);
     } else {
-       keyboard.set_power(true);
+        keyboard.set_power(true);
     }
     buffer_ptr + 1
 }
 
 
-fn proto_handle_toggle_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>, buffer_ptr: usize) -> usize {
-    if buffer_ptr >= buffer.len() {
+fn proto_handle_toggle_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>,
+                             buffer_ptr: usize) -> usize {
+    if buffer_ptr > buffer.len() {
         log::e(TAG, "bad request: buffer_ptr is out of range");
         return 0;
     }
@@ -212,12 +212,14 @@ fn proto_handle_toggle_power(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>
     buffer_ptr
 }
 
-fn proto_handle_request_modes(keyboard: &keyboard::Keyboard, buffer: &Vec<u8>, buffer_ptr: usize) -> usize {
-    if buffer_ptr >= buffer.len() {
+fn proto_handle_request_modes(keyboard: &keyboard::Keyboard, buffer: &Vec<u8>,
+                              buffer_ptr: usize, response: &mut ProtoResponse) -> usize {
+    if buffer_ptr > buffer.len() {
         log::e(TAG, "bad request: buffer_ptr is out of range");
         return 0;
     }
     let modes = keyboard.get_color_modes();
+    response.add_response(Box::new(modes));
     buffer_ptr
 }
 
@@ -229,7 +231,7 @@ pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>)
         return ProtoResponse::from_state(ProtoResponseState::ResultError);
     }
     keyboard.lock_sync();
-    //log::d(TAG, &format!("buffer={}", buffer));
+    //log::d(TAG, &format!("Received buffer size of {"));
     while buffer_ptr < buffer.len() {
         let cmd_byte = buffer[buffer_ptr];
         buffer_ptr += 1;
@@ -259,12 +261,17 @@ pub fn proto_handle_message(keyboard: &mut keyboard::Keyboard, buffer: &Vec<u8>)
         } else if cmd == ProtoCmd::CmdToggle {
             buffer_ptr = proto_handle_toggle_power(keyboard, buffer, buffer_ptr);
         } else if cmd == ProtoCmd::CmdReqModesAvail {
-            buffer_ptr = proto_handle_request_modes(keyboard, buffer, buffer_ptr);
+            buffer_ptr = proto_handle_request_modes(keyboard, buffer, buffer_ptr,
+                                                    &mut proto_response);
         }
         if buffer_ptr == 0 {
             log::e(TAG, "proto_handle_message: parsing message failed.");
             return ProtoResponse::from_state(ProtoResponseState::ResultBadRequest);
         }
+    }
+    if proto_response.state != ProtoResponseState::ResultData {
+        log::d(TAG, "Response state not data, setting to state ok");
+        proto_response = ProtoResponse::from_state(ProtoResponseState::ResultOk);
     }
     keyboard.save_state();
     keyboard.unlock_sync();

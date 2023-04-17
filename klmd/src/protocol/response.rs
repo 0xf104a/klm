@@ -1,3 +1,4 @@
+use crate::protocol::response::ProtoResponseState::ResultData;
 use crate::util::log;
 use crate::util::u8::{U8Serializable, U8VecSerializable};
 
@@ -25,7 +26,7 @@ impl U8Serializable for ProtoResponseState {
 pub struct ProtoResponse {
     result: Vec<u8>,
     state_only: bool,
-    state: ProtoResponseState,
+    pub(crate) state: ProtoResponseState,
 }
 
 impl U8VecSerializable for ProtoResponse {
@@ -46,15 +47,13 @@ impl U8VecSerializable for ProtoResponse {
 }
 
 impl ProtoResponse {
-    fn add_response(&mut self, response: Box<dyn U8VecSerializable>){
+    pub fn add_response(&mut self, response: Box<dyn U8VecSerializable>) {
+        self.state = ResultData;
+        self.state_only = false;
         self.result.extend(response.to_u8_vec());
     }
-    fn set_state_only(&mut self, state: ProtoResponseState){
-        self.state_only = true;
-        self.state = state;
-    }
-    pub(crate) fn from_state(state: ProtoResponseState) -> ProtoResponse{
-        ProtoResponse{
+    pub(crate) fn from_state(state: ProtoResponseState) -> ProtoResponse {
+        ProtoResponse {
             result: vec![],
             state_only: true,
             state,
