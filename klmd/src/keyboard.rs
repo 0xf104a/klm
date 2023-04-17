@@ -73,6 +73,7 @@ pub struct Keyboard {
     speed: u8,
     syncing: bool,
     power: bool,
+    need_sync: bool,
 }
 
 impl Keyboard {
@@ -85,13 +86,19 @@ impl Keyboard {
             speed: 0,
             syncing: false,
             power: false,
+            need_sync: false,
         }
     }
 
-    pub fn sync(&self) {
+    pub fn sync(&mut self) {
         if !self.syncing {
             log::w(TAG, "Sync is called, when keyboard syncing is off");
         }
+        if !self.need_sync {
+            // Do not touch driver if nothing was updated
+            return;
+        }
+        self.need_sync = false;
         if !self.power {
             self.driver.set_power(false);
             return;
@@ -135,6 +142,7 @@ impl Keyboard {
 
     pub fn set_state(&mut self, state: KeyboardState) {
         self.state = state;
+        self.need_sync = true;
         if self.syncing {
             self.sync();
         }
@@ -142,6 +150,7 @@ impl Keyboard {
 
     pub fn set_color(&mut self, color: color::RGB) {
         self.colors = vec![color];
+        self.need_sync = true;
         if self.syncing {
             self.sync();
         }
@@ -149,6 +158,7 @@ impl Keyboard {
 
     pub fn add_color(&mut self, color: color::RGB) {
         self.colors.push(color);
+        self.need_sync = true;
         if self.syncing {
             self.sync();
         }
@@ -156,6 +166,7 @@ impl Keyboard {
 
     pub fn set_brightness(&mut self, brightness: u8) {
         self.brightness = brightness;
+        self.need_sync = true;
         if self.syncing {
             self.sync();
         }
@@ -163,6 +174,7 @@ impl Keyboard {
 
     pub fn set_speed(&mut self, speed: u8) {
         self.speed = speed;
+        self.need_sync = true;
         if self.syncing {
             self.sync();
         }
@@ -173,11 +185,13 @@ impl Keyboard {
     }
 
     pub fn set_power(&mut self, power: bool) {
+        self.need_sync = true;
         self.power = power;
     }
 
     pub fn toggle_power(&mut self) {
         self.power = !self.power;
+        self.need_sync = true;
         self.sync();
     }
     pub fn save_state(&self) -> bool {
