@@ -6,6 +6,7 @@ profile klmd /usr/bin/klmd {
         include <abstractions/base>
         # Capabilities
         capability net_raw,
+        capability chown,
 
         # Network
         network raw, #FIXME: do we really need such a broad network access?
@@ -30,4 +31,7 @@ profile klmd /usr/bin/klmd {
 
         # Allow caching
         /var/cache/klm/** rw,
+
+        # Allow getting group(for checking whether group 'klm' exists)
+        /etc/group r,
 }

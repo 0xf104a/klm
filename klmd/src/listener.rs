@@ -1,7 +1,7 @@
 /**
  * This file is part of KLMd project.
  *
- *  Copyright 2022 by Polar <toddot@protonmail.com>
+ *  Copyright 2022-2023 by Polar <toddot@protonmail.com>
  *
  *  Licensed under GNU General Public License 3.0 or later.
  *  Some rights reserved. See COPYING, AUTHORS.
@@ -17,20 +17,34 @@ use crate::keyboard;
 use std::os::unix::net::UnixListener;
 use std::os::unix::fs::PermissionsExt;
 use std::io::prelude::*;
+use users::{Groups, UsersCache};
+use file_owner::PathExt;
 use crate::util::u8::U8Serializable;
 use crate::util::u8::U8VecSerializable;
 
 const TAG: &'static str = "listener";
 
+fn set_socket_permissions(){
+    let cache = UsersCache::new();
+    let group = cache.get_group_by_name("klm");
+    let perms = std::fs::Permissions::from_mode(0o660);
+    if group.is_none() {
+        log::w(TAG, "You do not have klm group in your system.");
+        log::w(TAG, "The permissions for socket would be set, but you may be unable to access it");
+    } else {
+        "/var/run/klmd.sock".set_group("klm").unwrap();
+    }
+    std::fs::set_permissions("/var/run/klmd.sock",
+                             perms).unwrap();
+}
 //Listeners accept UNIX-socket connections
 //and reads to buffer requests. Then it passes
 //buffer to protocol handler.
 //TODO: check errors in listen
-
 pub fn listen(keyboard: &mut keyboard::Keyboard){
     let listener = UnixListener::bind("/var/run/klmd.sock").unwrap();
 
-    std::fs::set_permissions("/var/run/klmd.sock", std::fs::Permissions::from_mode(0o660)).unwrap();
+    set_socket_permissions();
 
     log::i(TAG, "Started listening at /var/run/klmd.sock");
 

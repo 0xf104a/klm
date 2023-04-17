@@ -26,6 +26,7 @@ target_klmd(){
 target_install(){
     target_klmd
     require_root
+    groupadd klm
     info "Cleaning up previous installations..."
     exec rm -f /usr/lib/systemd/system/klmd.service
     exec rm -f /etc/apparmor.d/klmd
