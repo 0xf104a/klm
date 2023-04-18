@@ -9,7 +9,7 @@
 
 
 CARGO_OPTIONS=""
-RELEASE_TYPE="debug"
+RELEASE_TYPE="release"
 
 target_klmd(){
     info "Build klmd-$RELEASE_TYPE using cargo"

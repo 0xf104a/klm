@@ -225,6 +225,7 @@ impl Keyboard {
         let mut file = File::open(CACHE_FILENAME).expect("Unable to open file");
         let mut state_buffer = [0u8; 1];
         let mut color_buffer = [0u8; 3];
+        self.need_sync = true;
         //Read Brightness
         file.read_exact(&mut state_buffer).expect("Can not read brightness state");
         self.brightness = state_buffer[0];
